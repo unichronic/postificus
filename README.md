@@ -8,8 +8,6 @@ Here is a professional, portfolio-ready `README.md`. It highlights the architect
 
 **Postificus** is a high-performance, event-driven backend system designed to solve the fragmentation of technical blogging. It allows authors to write content once (in Markdown) and orchestrate its distribution across a disparate ecosystem of platforms (Medium, Dev.to, Hashnode, LinkedIn, X/Twitter) while strictly enforcing SEO authority via Canonical URLs.
 
-> **Project Goal:** To demonstrate advanced Go concurrency patterns, headless browser orchestration, and resilient distributed system design.
-
 ## 🚀 How It Works
 
 The system moves beyond simple API scripting by implementing a **Multi-Stage Resilience Pipeline**.
