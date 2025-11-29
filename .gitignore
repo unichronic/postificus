@@ -8,6 +8,9 @@
 *.so
 *.dylib
 
+chrome_data/
+tmp/
+
 # Test binary, built with `go test -c`
 *.test
 

@@ -80,13 +80,11 @@ const Editor = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title,
-                    content, // Note: This sends HTML. Backend might need to convert to Markdown if Dev.to API requires it, but for automation we can inject HTML or text.
-                    username: "user", // TODO: Get from config/env
-                    password: "pw"
+                    content
                 })
             });
             const data = await response.json();
-            alert(data.status === 'published' ? 'Published successfully!' : 'Failed to publish');
+            alert(data.status === 'published' ? 'Published successfully!' : 'Failed to publish: ' + (data.error || 'Unknown error'));
         } catch (e) {
             console.error(e);
             alert('Error publishing');
