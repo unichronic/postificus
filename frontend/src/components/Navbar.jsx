@@ -4,54 +4,6 @@ const Navbar = () => {
     const [showModal, setShowModal] = useState(false);
     const [token, setToken] = useState('');
 
-    const styles = {
-        nav: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '1rem 0',
-            marginBottom: '2rem',
-            borderBottom: `2px solid var(--color-sky-blue)`,
-        },
-        logo: {
-            fontSize: '1.5rem',
-            fontWeight: 'bold',
-            color: 'var(--color-fuchsia)',
-            textDecoration: 'none',
-        },
-        links: {
-            display: 'flex',
-            gap: '1rem',
-            alignItems: 'center',
-        },
-        link: {
-            color: 'var(--color-parma-violet)',
-            textDecoration: 'none',
-            fontWeight: '500',
-        },
-        modalOverlay: {
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-        },
-        modal: {
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '8px',
-            width: '400px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-        }
-    };
-
     const handleConnect = async () => {
         try {
             const response = await fetch('http://localhost:8080/config/devto', {
@@ -74,30 +26,51 @@ const Navbar = () => {
 
     return (
         <>
-            <nav style={styles.nav}>
-                <a href="/" style={styles.logo}>Postificus</a>
-                <div style={styles.links}>
-                    <a href="#" style={styles.link}>New Post</a>
-                    <button onClick={() => setShowModal(true)} style={{ fontSize: '0.9rem', padding: '0.4rem 0.8rem' }}>
+            <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-8 py-4 bg-white/70 backdrop-blur-md border-b border-white/20 shadow-sm">
+                <a href="/" className="text-2xl font-bold bg-gradient-to-r from-magical-fuchsia to-magical-violet bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+                    Postificus
+                </a>
+                <div className="flex gap-6 items-center">
+                    <a href="#" className="text-gray-600 hover:text-magical-violet font-medium transition-colors">
+                        New Post
+                    </a>
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-magical-violet to-magical-fuchsia rounded-full shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
+                    >
                         Connect Dev.to
                     </button>
                 </div>
             </nav>
 
+            {/* Spacer for fixed navbar */}
+            <div className="h-20"></div>
+
             {showModal && (
-                <div style={styles.modalOverlay} onClick={() => setShowModal(false)}>
-                    <div style={styles.modal} onClick={e => e.stopPropagation()}>
-                        <h3>Connect Dev.to</h3>
-                        <p>Paste your <code>remember_user_token</code> cookie value here:</p>
+                <div className="fixed inset-0 z-[100] flex justify-center items-center bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)}>
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-96 flex flex-col gap-4 animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-gray-800">Connect Dev.to</h3>
+                        <p className="text-sm text-gray-600">Paste your <code className="bg-gray-100 px-1 py-0.5 rounded text-magical-violet">remember_user_token</code> cookie value here:</p>
                         <input
                             type="text"
                             value={token}
                             onChange={e => setToken(e.target.value)}
                             placeholder="Paste token here..."
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-magical-sky/50 transition-all"
                         />
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                            <button onClick={() => setShowModal(false)} style={{ backgroundColor: '#ccc' }}>Cancel</button>
-                            <button onClick={handleConnect}>Save Token</button>
+                        <div className="flex justify-end gap-3 mt-2">
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConnect}
+                                className="px-4 py-2 text-white bg-magical-violet hover:bg-magical-fuchsia rounded-lg shadow-md transition-colors"
+                            >
+                                Save Token
+                            </button>
                         </div>
                     </div>
                 </div>

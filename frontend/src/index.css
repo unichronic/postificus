@@ -1,21 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-    --color-sky-blue: #87CEEB;
-    --color-parma-violet: #8D93D9;
-    /* Approximate Parma Violet */
-    --color-pink: #FFC0CB;
-    --color-fuchsia: #FF00FF;
-
-    --bg-primary: #ffffff;
-    --text-primary: #333333;
-    --border-color: #e0e0e0;
-
     font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     font-weight: 400;
 
     color-scheme: light dark;
-    color: var(--text-primary);
-    background-color: var(--bg-primary);
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #242424;
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -25,49 +19,22 @@
 
 body {
     margin: 0;
-    display: flex;
-    place-items: center;
     min-width: 320px;
     min-height: 100vh;
     background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    color: #333;
 }
 
-#root {
-    width: 100%;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
+/* Custom Scrollbar for Editor */
+.ProseMirror::-webkit-scrollbar {
+    width: 8px;
 }
 
-button {
-    border-radius: 8px;
-    border: 1px solid transparent;
-    padding: 0.6em 1.2em;
-    font-size: 1em;
-    font-weight: 500;
-    font-family: inherit;
-    background-color: var(--color-parma-violet);
-    color: white;
-    cursor: pointer;
-    transition: border-color 0.25s;
+.ProseMirror::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-button:hover {
-    background-color: var(--color-fuchsia);
-}
-
-button:focus,
-button:focus-visible {
-    outline: 4px auto -webkit-focus-ring-color;
-}
-
-input,
-textarea {
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-    padding: 0.6em;
-    font-family: inherit;
-    background-color: white;
-    color: var(--text-primary);
+.ProseMirror::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 20px;
 }

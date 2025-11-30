@@ -12,62 +12,10 @@ const Editor = () => {
         content: '<p>Start writing your post here...</p>',
         editorProps: {
             attributes: {
-                class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl m-5 focus:outline-none',
+                class: 'prose prose-lg max-w-none focus:outline-none min-h-[50vh] p-4',
             },
         },
     });
-
-    const styles = {
-        container: {
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            textAlign: 'left',
-            maxWidth: '800px',
-            margin: '0 auto',
-        },
-        input: {
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            width: '100%',
-            boxSizing: 'border-box',
-            border: 'none',
-            borderBottom: `2px solid var(--color-sky-blue)`,
-            outline: 'none',
-            padding: '0.5rem 0',
-            backgroundColor: 'transparent',
-        },
-        editorContainer: {
-            minHeight: '60vh',
-            border: `1px solid var(--color-parma-violet)`,
-            borderRadius: '8px',
-            padding: '1rem',
-            backgroundColor: '#fff',
-            overflowY: 'auto',
-        },
-        toolbar: {
-            display: 'flex',
-            gap: '0.5rem',
-            marginBottom: '1rem',
-            borderBottom: '1px solid #eee',
-            paddingBottom: '0.5rem',
-        },
-        toolbarButton: (isActive) => ({
-            padding: '0.4rem 0.8rem',
-            borderRadius: '4px',
-            border: 'none',
-            cursor: 'pointer',
-            backgroundColor: isActive ? 'var(--color-parma-violet)' : '#f0f0f0',
-            color: isActive ? 'white' : '#333',
-            fontWeight: '500',
-        }),
-        actions: {
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '1rem',
-            marginTop: '1rem',
-        }
-    };
 
     const handlePublish = async () => {
         if (!editor) return;
@@ -95,49 +43,73 @@ const Editor = () => {
         return null;
     }
 
+    const ToolbarButton = ({ onClick, isActive, children }) => (
+        <button
+            onClick={onClick}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isActive
+                    ? 'bg-magical-violet text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+        >
+            {children}
+        </button>
+    );
+
     return (
-        <div style={styles.container}>
+        <div className="max-w-4xl mx-auto flex flex-col gap-6 p-6">
             <input
                 type="text"
                 placeholder="Post Title"
-                style={styles.input}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                className="text-4xl font-bold w-full bg-transparent border-b-2 border-transparent focus:border-magical-sky/30 outline-none placeholder-gray-300 transition-colors pb-2"
             />
 
-            <div style={styles.editorContainer}>
-                <div style={styles.toolbar}>
-                    <button
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                {/* Toolbar */}
+                <div className="flex gap-2 p-3 border-b border-gray-100 bg-gray-50/50 backdrop-blur-sm">
+                    <ToolbarButton
                         onClick={() => editor.chain().focus().toggleBold().run()}
-                        style={styles.toolbarButton(editor.isActive('bold'))}
+                        isActive={editor.isActive('bold')}
                     >
                         Bold
-                    </button>
-                    <button
+                    </ToolbarButton>
+                    <ToolbarButton
                         onClick={() => editor.chain().focus().toggleItalic().run()}
-                        style={styles.toolbarButton(editor.isActive('italic'))}
+                        isActive={editor.isActive('italic')}
                     >
                         Italic
-                    </button>
-                    <button
+                    </ToolbarButton>
+                    <ToolbarButton
                         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                        style={styles.toolbarButton(editor.isActive('heading', { level: 2 }))}
+                        isActive={editor.isActive('heading', { level: 2 })}
                     >
                         H2
-                    </button>
-                    <button
+                    </ToolbarButton>
+                    <ToolbarButton
                         onClick={() => editor.chain().focus().toggleBulletList().run()}
-                        style={styles.toolbarButton(editor.isActive('bulletList'))}
+                        isActive={editor.isActive('bulletList')}
                     >
                         Bullet List
-                    </button>
+                    </ToolbarButton>
                 </div>
-                <EditorContent editor={editor} />
+
+                {/* Editor Content */}
+                <div className="bg-white">
+                    <EditorContent editor={editor} />
+                </div>
             </div>
 
-            <div style={styles.actions}>
-                <button style={{ backgroundColor: 'var(--color-pink)', color: '#333' }}>Save Draft</button>
-                <button onClick={handlePublish}>Publish to Dev.to</button>
+            <div className="flex justify-end gap-4 mt-4">
+                <button className="px-6 py-2.5 text-gray-700 font-medium bg-magical-pink/20 hover:bg-magical-pink/40 rounded-xl transition-colors">
+                    Save Draft
+                </button>
+                <button
+                    onClick={handlePublish}
+                    className="px-6 py-2.5 text-white font-medium bg-gradient-to-r from-magical-violet to-magical-fuchsia rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200"
+                >
+                    Publish to Dev.to
+                </button>
             </div>
         </div>
     );
