@@ -80,10 +80,23 @@ func PostToDevToWithCookie(sessionToken, title, content string) error {
 	// DO NOT PRESS ENTER. It submits the form prematurely.
 	fmt.Println("Adding tags...")
 
-	// Find input (simplified race)
-	tagInput, err := page.Element("#article_tags")
+	// Find input (robust race with wait)
+	var tagInput *rod.Element
+	err := rod.Try(func() {
+		tagInput = page.Race().
+			Element("#article_tags").MustHandle(func(e *rod.Element) {
+			tagInput = e
+		}).
+			Element("input[placeholder*='tags']").MustHandle(func(e *rod.Element) {
+			tagInput = e
+		}).
+			MustDo()
+	})
+
 	if err != nil {
-		tagInput = page.MustElement("input[placeholder*='tags']")
+		fmt.Println("❌ Failed to find tag input. Capturing screenshot...")
+		page.MustScreenshot("debug_tags_missing.png")
+		return fmt.Errorf("could not find tag input: %w", err)
 	}
 
 	// Input text and BLUR (click away) to register the tag

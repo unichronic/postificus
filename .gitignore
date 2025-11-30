@@ -10,6 +10,7 @@
 
 chrome_data/
 tmp/
+cmd/wizard_demo/main.go
 
 # Test binary, built with `go test -c`
 *.test
