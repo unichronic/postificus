@@ -1,0 +1,6 @@
+# Ignore frontend node_modules and build artifacts
+frontend/node_modules
+frontend/dist
+tmp
+.git
+.env

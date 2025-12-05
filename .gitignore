@@ -7,6 +7,8 @@
 *.dll
 *.so
 *.dylib
+DEPLOY.md
+render.yaml
 
 chrome_data/
 tmp/

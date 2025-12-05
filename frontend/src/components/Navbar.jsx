@@ -6,7 +6,7 @@ const Navbar = () => {
 
     const handleConnect = async () => {
         try {
-            const response = await fetch('http://localhost:8080/config/devto', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/config/devto`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token })

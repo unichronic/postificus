@@ -23,7 +23,7 @@ const Editor = () => {
         console.log("Publishing:", { title, content });
 
         try {
-            const response = await fetch('http://localhost:8080/publish/devto', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/publish/devto`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -47,8 +47,8 @@ const Editor = () => {
         <button
             onClick={onClick}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isActive
-                    ? 'bg-magical-violet text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100'
+                ? 'bg-magical-violet text-white shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100'
                 }`}
         >
             {children}
