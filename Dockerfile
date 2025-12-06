@@ -20,7 +20,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 FROM alpine:latest
 
 # Install Chromium for go-rod
-RUN apk add --no-cache chromium
+RUN apk add --no-cache chromium ca-certificates font-noto-emoji
 
 # Set environment variables for go-rod
 ENV ROD_BIN=/usr/bin/chromium-browser

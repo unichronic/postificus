@@ -2,6 +2,7 @@ package automation
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/go-rod/rod"
@@ -14,10 +15,15 @@ var Browser *rod.Browser
 // InitBrowser launches a global browser instance.
 func InitBrowser() error {
 	path, _ := launcher.LookPath()
+	// Check if running in production (Render sets PORT)
+	isProduction := os.Getenv("PORT") != ""
+
 	u := launcher.New().
 		Bin(path).
-		NoSandbox(true). // CRITICAL for Linux/Containers
-		Headless(false). // Keep visible for debugging
+		NoSandbox(true).
+		Headless(isProduction). // Headless in prod, visible locally
+		Set("disable-gpu").
+		Set("disable-dev-shm-usage").
 		MustLaunch()
 
 	Browser = rod.New().ControlURL(u).MustConnect()

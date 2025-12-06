@@ -103,7 +103,11 @@ func main() {
 
 	// Start server
 	go func() {
-		if err := e.Start(":8080"); err != nil && err != http.ErrServerClosed {
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
+		if err := e.Start(":" + port); err != nil && err != http.ErrServerClosed {
 			e.Logger.Fatal("shutting down the server")
 		}
 	}()
