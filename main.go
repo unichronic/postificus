@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"postificus/automation"
+	"postificus/internal/llm"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -27,6 +28,12 @@ func main() {
 		log.Fatal("Failed to initialize browser:", err)
 	}
 	defer automation.CloseBrowser()
+
+	// Initialize LLM Summarizer
+	summarizer, err := llm.NewSummarizer(context.Background())
+	if err != nil {
+		log.Println("Warning: Failed to initialize LLM Summarizer (check GEMINI_API_KEY):", err)
+	}
 
 	// Setup Echo
 	e := echo.New()
@@ -76,10 +83,20 @@ func main() {
 		return c.JSON(http.StatusOK, map[string]string{"status": "saved"})
 	})
 
+	// Endpoint to check Dev.to connection status
+	e.GET("/config/devto", func(c echo.Context) error {
+		token := os.Getenv("DEVTO_SESSION_TOKEN")
+		if token != "" {
+			return c.JSON(http.StatusOK, map[string]bool{"connected": true})
+		}
+		return c.JSON(http.StatusOK, map[string]bool{"connected": false})
+	})
+
 	e.POST("/publish/devto", func(c echo.Context) error {
 		var req struct {
-			Title   string `json:"title"`
-			Content string `json:"content"`
+			Title   string   `json:"title"`
+			Content string   `json:"content"`
+			Tags    []string `json:"tags"`
 		}
 		if err := c.Bind(&req); err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
@@ -92,13 +109,97 @@ func main() {
 		}
 
 		// Trigger automation
-		err := automation.PostToDevToWithCookie(token, req.Title, req.Content)
+		err := automation.PostToDevToWithCookie(token, req.Title, req.Content, req.Tags)
 		if err != nil {
 			e.Logger.Error("Automation failed", err)
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{"status": "published"})
+	})
+
+	e.POST("/publish/medium", func(c echo.Context) error {
+		var req struct {
+			Title   string `json:"title"`
+			Content string `json:"content"`
+		}
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+		}
+
+		uid := os.Getenv("MEDIUM_UID")
+		sid := os.Getenv("MEDIUM_SID")
+		xsrf := os.Getenv("MEDIUM_XSRF")
+
+		if uid == "" || sid == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Medium credentials not configured (MEDIUM_UID, MEDIUM_SID)"})
+		}
+
+		// Trigger automation
+		err := automation.PostToMedium(uid, sid, xsrf, req.Title, req.Content)
+		if err != nil {
+			e.Logger.Error("Medium Automation failed", err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{"status": "published"})
+	})
+
+	e.POST("/config/linkedin", func(c echo.Context) error {
+		var req struct {
+			LiAt string `json:"li_at"`
+		}
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+		}
+		if req.LiAt == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "li_at is required"})
+		}
+
+		f, err := os.OpenFile(".env", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to open .env file"})
+		}
+		defer f.Close()
+
+		if _, err := f.WriteString(fmt.Sprintf("\nLI_AT=%s\n", req.LiAt)); err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to write to .env file"})
+		}
+		godotenv.Load()
+		return c.JSON(http.StatusOK, map[string]string{"status": "saved"})
+	})
+
+	e.POST("/publish/linkedin", func(c echo.Context) error {
+		var req struct {
+			BlogContent string `json:"blog_content"`
+			BlogURL     string `json:"blog_url"`
+		}
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+		}
+
+		liAt := os.Getenv("LI_AT")
+		if liAt == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "LinkedIn li_at cookie not configured."})
+		}
+
+		if summarizer == nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "LLM Summarizer not initialized (missing GEMINI_API_KEY?)"})
+		}
+
+		// 1. Generate Content
+		postContent, err := summarizer.GenerateSocialContent(c.Request().Context(), req.BlogContent)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "LLM generation failed: " + err.Error()})
+		}
+
+		// 2. Post to LinkedIn
+		err = automation.PostToLinkedIn(liAt, postContent, req.BlogURL)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "LinkedIn automation failed: " + err.Error()})
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{"status": "published", "content": postContent})
 	})
 
 	// Start server

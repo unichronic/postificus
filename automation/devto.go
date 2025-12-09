@@ -2,43 +2,16 @@ package automation
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 )
 
-var Browser *rod.Browser
-
-// InitBrowser launches a global browser instance.
-func InitBrowser() error {
-	path, _ := launcher.LookPath()
-	// Check if running in production (Render sets PORT)
-	isProduction := os.Getenv("PORT") != ""
-
-	u := launcher.New().
-		Bin(path).
-		NoSandbox(true).
-		Headless(isProduction). // Headless in prod, visible locally
-		Set("disable-gpu").
-		Set("disable-dev-shm-usage").
-		MustLaunch()
-
-	Browser = rod.New().ControlURL(u).MustConnect()
-	return nil
-}
-
-// CloseBrowser closes the global browser instance.
-func CloseBrowser() {
-	if Browser != nil {
-		Browser.MustClose()
-	}
-}
+// Browser logic moved to browser.go
 
 // PostToDevToWithCookie bypasses login by injecting a valid session token.
-func PostToDevToWithCookie(sessionToken, title, content string) error {
+func PostToDevToWithCookie(sessionToken, title, content string, tags []string) error {
 	if Browser == nil {
 		return fmt.Errorf("browser not initialized")
 	}
@@ -105,8 +78,19 @@ func PostToDevToWithCookie(sessionToken, title, content string) error {
 		return fmt.Errorf("could not find tag input: %w", err)
 	}
 
-	// Input text and BLUR (click away) to register the tag
-	tagInput.MustInput("automation").MustBlur()
+	// Input tags
+	if len(tags) > 0 {
+		for _, tag := range tags {
+			tagInput.MustInput(tag).MustBlur()
+			// Wait a bit for the tag to be processed
+			time.Sleep(200 * time.Millisecond)
+			// Re-focus for next tag if needed, but usually inputting appends
+			tagInput.MustClick()
+		}
+	} else {
+		// Default tag if none provided
+		tagInput.MustInput("automation").MustBlur()
+	}
 
 	// Wait for the UI to settle after blurring (Dev.to does JS processing here)
 	page.MustWaitStable()
