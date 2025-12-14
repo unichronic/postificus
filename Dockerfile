@@ -1,37 +1,42 @@
-# Build Stage
-FROM golang:1.23-alpine AS builder
+# Stage 1: Build
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache git
-
-# Copy go mod and sum files
+# Install dependencies (cached)
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
+# Copy source
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+# Build binaries (Static linking for Alpine)
+RUN CGO_ENABLED=0 GOOS=linux go build -o postificus-api ./cmd/api/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o postificus-worker ./cmd/worker/main.go
 
-# Final Stage
+# Stage 2: Run (Tiny Image)
 FROM alpine:latest
 
-# Install Chromium for go-rod
-RUN apk add --no-cache chromium ca-certificates font-noto-emoji
+WORKDIR /root/
+ENV APP_ENV=production
 
-# Set environment variables for go-rod
-ENV ROD_BIN=/usr/bin/chromium-browser
+# Install Chromium/Chrome dependencies for Rod (CRITICAL for Alpine)
+# Rod needs these libraries to run the browser even if Chrome is downloaded separately
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
 
-WORKDIR /app
+# Copy binaries from builder
+COPY --from=builder /app/postificus-api .
+COPY --from=builder /app/postificus-worker .
 
-# Copy binary from builder
-COPY --from=builder /app/main .
 
-# Expose port
+# Expose API port
 EXPOSE 8080
 
-# Run the application
-CMD ["./main"]
+# Default command (can be overridden in compose)
+CMD ["./postificus-api"]

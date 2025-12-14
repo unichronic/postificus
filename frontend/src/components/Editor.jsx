@@ -1,19 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
-import { Bold, Italic, Heading2, List, Quote, Code, Link as LinkIcon, Image as ImageIcon, Save, Send, ArrowLeft } from 'lucide-react';
+import { Bold, Italic, Heading2, List, Quote, Code, Link as LinkIcon, Image as ImageIcon, Save, Send, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
 import { Link as RouterLink } from 'react-router-dom';
 import CoverImage from './CoverImage';
 import TagInput from './TagInput';
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const Editor = () => {
+// Simple debounce hook
+const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+    return debouncedValue;
+};
+
+const Editor = ({ draftId }) => {
     const [title, setTitle] = useState('');
     const [coverImage, setCoverImage] = useState('');
     const [tags, setTags] = useState([]);
     const [isPublishing, setIsPublishing] = useState(false);
+    const [platform, setPlatform] = useState('linkedin');
+    const [saveStatus, setSaveStatus] = useState('saved'); // 'saved', 'saving', 'unsaved'
 
     const editor = useEditor({
         extensions: [
@@ -29,7 +46,45 @@ const Editor = () => {
                 class: 'prose prose-lg max-w-none focus:outline-none min-h-[50vh] p-4 text-gray-700',
             },
         },
+        onUpdate: () => {
+            setSaveStatus('unsaved');
+        },
     });
+
+    // Auto-Save Logic
+    const debouncedTitle = useDebounce(title, 1000);
+    const debouncedContent = useDebounce(editor?.getHTML(), 1000);
+    const debouncedTags = useDebounce(tags, 1000);
+
+    const saveDraft = useCallback(async () => {
+        if (!draftId || !editor) return;
+
+        setSaveStatus('saving');
+        try {
+            const content = editor.getHTML();
+            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/drafts/${draftId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title,
+                    content,
+                    cover_image: coverImage,
+                    tags
+                })
+            });
+            setSaveStatus('saved');
+        } catch (error) {
+            console.error("Auto-save failed:", error);
+            setSaveStatus('unsaved');
+        }
+    }, [draftId, editor, title, coverImage, tags]);
+
+    useEffect(() => {
+        if (debouncedTitle || debouncedContent || debouncedTags) {
+            saveDraft();
+        }
+    }, [debouncedTitle, debouncedContent, debouncedTags, saveDraft]);
+
 
     const handlePublish = async () => {
         if (!editor || !title) {
@@ -39,21 +94,43 @@ const Editor = () => {
 
         setIsPublishing(true);
         const content = editor.getHTML();
-        console.log("Publishing:", { title, coverImage, tags, content });
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/publish/devto`, {
+            // Determine endpoint based on platform
+            // In a real app, we might have a unified /publish endpoint that takes platform as a param
+            // But our backend currently has specific endpoints or a generic one.
+            // Let's assume we use the generic /publish/linkedin for now as per the blueprint example,
+            // or we can adapt to the new generic worker task structure.
+            // For this implementation, we'll route to the specific platform endpoint if it exists,
+            // or a generic one.
+
+            let endpoint = '/publish/linkedin';
+            let payload = {
+                title,
+                content,
+                blog_url: '', // Optional
+                blog_content: content // Legacy support if needed
+            };
+
+            if (platform === 'medium') {
+                endpoint = '/publish/medium';
+            } else if (platform === 'devto') {
+                endpoint = '/publish/devto';
+            }
+
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title,
-                    content,
-                    cover_image: coverImage,
-                    tags
-                })
+                body: JSON.stringify(payload)
             });
+
             const data = await response.json();
-            alert(data.status === 'published' ? 'Published successfully!' : 'Failed to publish: ' + (data.error || 'Unknown error'));
+
+            if (response.ok) {
+                alert(`Successfully queued for ${platform}!`);
+            } else {
+                alert('Failed to publish: ' + (data.error || 'Unknown error'));
+            }
         } catch (e) {
             console.error(e);
             alert('Error publishing');
@@ -112,12 +189,27 @@ const Editor = () => {
                         </Button>
                     </RouterLink>
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></div>
-                        <span className="text-sm font-medium text-gray-500">Draft - Unsaved changes</span>
+                        {saveStatus === 'saving' && <Loader2 className="w-3 h-3 animate-spin text-gray-400" />}
+                        {saveStatus === 'saved' && <CheckCircle className="w-3 h-3 text-green-500" />}
+                        {saveStatus === 'unsaved' && <div className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></div>}
+                        <span className="text-sm font-medium text-gray-500">
+                            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved' : 'Unsaved changes'}
+                        </span>
                     </div>
                 </div>
-                <div className="flex gap-3">
-                    <Button variant="ghost" className="text-gray-600">
+                <div className="flex gap-3 items-center">
+                    <Select value={platform} onValueChange={setPlatform}>
+                        <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="linkedin">LinkedIn</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="devto">Dev.to</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Button variant="ghost" className="text-gray-600" onClick={saveDraft}>
                         <Save className="w-4 h-4 mr-2" />
                         Save Draft
                     </Button>

@@ -1,0 +1,123 @@
+
+
+services:
+  # -------------------------------------------------------
+  # 1. THE DATABASE (PostgreSQL)
+  # -------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: postificus_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postificus
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d postificus"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------
+  # 2. THE QUEUE & CACHE (Redis)
+  # -------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: postificus_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_net
+
+  # -------------------------------------------------------
+  # 3. OBJECT STORAGE (MinIO - S3 Compatible)
+  # -------------------------------------------------------
+  minio:
+    image: minio/minio
+    container_name: postificus_s3
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - app_net
+
+  # -------------------------------------------------------
+  # 4. THE API SERVER (High Availability)
+  # -------------------------------------------------------
+  api:
+    build: .
+    container_name: postificus_api
+    command: ["./postificus-api"] # Command to run Echo
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/postificus?sslmode=disable
+      - REDIS_URL=redis:6379
+      - S3_ENDPOINT=minio:9000
+      - S3_ACCESS_KEY=admin
+      - S3_SECRET_KEY=password123
+      - APP_ENV=production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app_net
+
+  # -------------------------------------------------------
+  # 5. THE WORKER (Automation Engine)
+  # -------------------------------------------------------
+  worker:
+    build: .
+    container_name: postificus_worker
+    command: ["./postificus-worker"] # Command to run Asynq
+    restart: always
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/postificus?sslmode=disable
+      - REDIS_URL=redis:6379
+      # Pass your cookies here
+      - LI_AT=${LI_AT}
+      - MEDIUM_UID=${MEDIUM_UID}
+      - MEDIUM_SID=${MEDIUM_SID}
+      - MEDIUM_XSRF=${MEDIUM_XSRF}
+      - DEVTO_SESSION_TOKEN=${DEVTO_SESSION_TOKEN}
+      - APP_ENV=production
+    deploy:
+      resources:
+        limits:
+          # RESOURCE SAFETY: Prevent the browser from eating 100% RAM
+          cpus: '1.0'
+          memory: 1G
+    depends_on:
+      redis:
+        condition: service_started
+      api:
+        condition: service_started
+    networks:
+      - app_net
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  app_net:
+    driver: bridge

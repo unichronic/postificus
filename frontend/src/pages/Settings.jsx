@@ -7,49 +7,8 @@ import { User, Link as LinkIcon, Save, CheckCircle, Edit2 } from 'lucide-react';
 
 const Settings = () => {
     const [activeTab, setActiveTab] = useState("connections");
-    const [devToToken, setDevToToken] = useState('');
-    const [isSaving, setIsSaving] = useState(false);
-    const [isConnected, setIsConnected] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
 
-    useEffect(() => {
-        checkConnection();
-    }, []);
 
-    const checkConnection = async () => {
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/config/devto`);
-            const data = await response.json();
-            setIsConnected(data.connected);
-        } catch (e) {
-            console.error("Failed to check connection", e);
-        }
-    };
-
-    const handleSaveDevTo = async () => {
-        setIsSaving(true);
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/config/devto`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: devToToken })
-            });
-            const data = await response.json();
-            if (data.status === 'saved') {
-                alert('Token saved successfully!');
-                setIsConnected(true);
-                setIsEditing(false);
-                setDevToToken('');
-            } else {
-                alert('Failed to save token: ' + data.error);
-            }
-        } catch (e) {
-            console.error(e);
-            alert('Error connecting to backend');
-        } finally {
-            setIsSaving(false);
-        }
-    };
 
     return (
         <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -109,72 +68,40 @@ const Settings = () => {
                                 <CardDescription>Manage your external account connections.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="p-4 border border-gray-200 rounded-xl bg-white/50">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                                                <span className="text-white font-bold text-xs">DEV</span>
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-gray-800">Dev.to</h3>
-                                                <p className="text-sm text-gray-500">Connect your Dev.to account to publish posts.</p>
-                                            </div>
-                                        </div>
-                                        {isConnected && !isEditing && (
-                                            <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm font-medium">
-                                                <CheckCircle className="w-4 h-4" />
-                                                Connected
-                                            </div>
-                                        )}
-                                    </div>
+                                {/* Dev.to */}
+                                <ConnectionCard
+                                    platform="devto"
+                                    name="Dev.to"
+                                    description="Connect your Dev.to account to publish posts."
+                                    icon="DEV"
+                                    fields={[
+                                        { key: "token", label: "API Key / Token", type: "password", placeholder: "Paste your token here..." }
+                                    ]}
+                                />
 
-                                    {isConnected && !isEditing ? (
-                                        <div className="flex justify-end">
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => setIsEditing(true)}
-                                                className="gap-2"
-                                            >
-                                                <Edit2 className="w-4 h-4" />
-                                                Edit Token
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                                            <label className="text-sm font-medium text-gray-700">
-                                                API Key / Token
-                                                <span className="ml-2 text-xs text-gray-400 font-normal">(remember_user_token)</span>
-                                            </label>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    type="password"
-                                                    value={devToToken}
-                                                    onChange={(e) => setDevToToken(e.target.value)}
-                                                    placeholder="Paste your token here..."
-                                                    className="flex-1"
-                                                />
-                                                <Button
-                                                    onClick={handleSaveDevTo}
-                                                    disabled={isSaving}
-                                                    className="bg-magical-violet hover:bg-magical-fuchsia text-white"
-                                                >
-                                                    {isSaving ? 'Saving...' : 'Save'}
-                                                </Button>
-                                                {isConnected && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        onClick={() => setIsEditing(false)}
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-gray-500">
-                                                Your token is stored locally and used only to authenticate with Dev.to.
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
+                                {/* Medium */}
+                                <ConnectionCard
+                                    platform="medium"
+                                    name="Medium"
+                                    description="Connect your Medium account (uid, sid, xsrf)."
+                                    icon="M"
+                                    fields={[
+                                        { key: "uid", label: "UID", type: "password", placeholder: "Medium UID cookie" },
+                                        { key: "sid", label: "SID", type: "password", placeholder: "Medium SID cookie" },
+                                        { key: "xsrf", label: "XSRF", type: "password", placeholder: "Medium XSRF cookie" }
+                                    ]}
+                                />
+
+                                {/* LinkedIn */}
+                                <ConnectionCard
+                                    platform="linkedin"
+                                    name="LinkedIn"
+                                    description="Connect your LinkedIn account (li_at cookie)."
+                                    icon="IN"
+                                    fields={[
+                                        { key: "li_at", label: "li_at Cookie", type: "password", placeholder: "Paste your li_at cookie..." }
+                                    ]}
+                                />
                             </CardContent>
                         </Card>
                     )}
@@ -183,5 +110,128 @@ const Settings = () => {
         </div>
     );
 };
+
+// Reusable Connection Component
+const ConnectionCard = ({ platform, name, description, icon, fields }) => {
+    const [isConnected, setIsConnected] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [formData, setFormData] = useState({});
+
+    useEffect(() => {
+        checkConnection();
+    }, []);
+
+    const checkConnection = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/settings/credentials/${platform}`);
+            const data = await response.json();
+            setIsConnected(data.connected);
+        } catch (e) {
+            console.error(`Failed to check ${platform} connection`, e);
+        }
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/settings/credentials`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ platform, credentials: formData })
+            });
+            const data = await response.json();
+            if (data.status === 'saved') {
+                alert(`${name} connected successfully!`);
+                setIsConnected(true);
+                setIsEditing(false);
+                setFormData({});
+            } else {
+                alert('Failed to save: ' + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error connecting to backend');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleChange = (key, value) => {
+        setFormData(prev => ({ ...prev, [key]: value }));
+    };
+
+    return (
+        <div className="p-4 border border-gray-200 rounded-xl bg-white/50">
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-xs">{icon}</span>
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-gray-800">{name}</h3>
+                        <p className="text-sm text-gray-500">{description}</p>
+                    </div>
+                </div>
+                {isConnected && !isEditing && (
+                    <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm font-medium">
+                        <CheckCircle className="w-4 h-4" />
+                        Connected
+                    </div>
+                )}
+            </div>
+
+            {isConnected && !isEditing ? (
+                <div className="flex justify-end">
+                    <Button
+                        variant="outline"
+                        onClick={() => setIsEditing(true)}
+                        className="gap-2"
+                    >
+                        <Edit2 className="w-4 h-4" />
+                        Edit Credentials
+                    </Button>
+                </div>
+            ) : (
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                    {fields.map((field) => (
+                        <div key={field.key} className="space-y-1">
+                            <label className="text-sm font-medium text-gray-700">
+                                {field.label}
+                            </label>
+                            <Input
+                                type={field.type}
+                                value={formData[field.key] || ''}
+                                onChange={(e) => handleChange(field.key, e.target.value)}
+                                placeholder={field.placeholder}
+                            />
+                        </div>
+                    ))}
+                    <div className="flex gap-2 pt-2">
+                        <Button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="bg-magical-violet hover:bg-magical-fuchsia text-white"
+                        >
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </Button>
+                        {isConnected && (
+                            <Button
+                                variant="ghost"
+                                onClick={() => setIsEditing(false)}
+                            >
+                                Cancel
+                            </Button>
+                        )}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                        Credentials are stored securely and used only for automation.
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 export default Settings;
