@@ -38,6 +38,71 @@ Unlike standard cross-posters that fail when an API goes down, Postificus implem
 *   **Stealth Mode:** Uses `rod-stealth` to strip `navigator.webdriver` flags, allowing the bot to pass as a human user on Single Page Applications (SPAs).
 *   **Headless Production:** Automatically detects production environments (Docker/Render) to run headlessly, while keeping the UI visible for local debugging.
 
+## 🚀 Getting Started
+
+Follow these instructions to set up the project locally.
+
+### Prerequisites
+
+*   **Go**: v1.24 or higher
+*   **Node.js**: v20 or higher (for frontend)
+*   **Docker**: (Optional) For containerized execution
+*   **Redis**: Required for the task queue (if running locally without Docker)
+*   **PostgreSQL**: Required for the database (if running locally without Docker)
+
+### Installation
+
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/unichronic/postificus.git
+    cd postificus
+    ```
+
+2.  **Configure Environment**
+    Copy the example environment file and fill in your credentials:
+    ```bash
+    cp .env.example .env
+    ```
+    > **Note:** You will need to obtain session cookies/tokens for Dev.to, Medium, and LinkedIn manually from your browser dev tools if you plan to use the automation features.
+
+### Running with Docker (Recommended)
+
+The easiest way to run the entire stack (DB, Redis, API, Worker, Frontend) is using Docker Compose.
+
+```bash
+docker-compose up --build
+```
+
+The application will be available at:
+*   **Frontend**: http://localhost:5173 (or the port exposed by Vite)
+*   **API**: http://localhost:8080
+
+### Local Development
+
+If you prefer to run services individually for development:
+
+1.  **Start Dependencies (DB & Redis)**
+    ```bash
+    docker-compose up -d db redis minio
+    ```
+
+2.  **Run the Backend (API)**
+    ```bash
+    go run cmd/api/main.go
+    ```
+
+3.  **Run the Worker (in a separate terminal)**
+    ```bash
+    go run cmd/worker/main.go
+    ```
+
+4.  **Run the Frontend**
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
+
 ## ☁️ Deployment
 
 The system is architected for a modern cloud stack:
@@ -46,7 +111,6 @@ The system is architected for a modern cloud stack:
     *   *Note*: Requires a custom Dockerfile to include Chromium dependencies.
 *   **Frontend**: Deployed as a static SPA on **Vercel**.
 
-👉 **[Read the Deployment Guide](DEPLOY.md)** for step-by-step instructions.
 
 ## 🛠️ Tech Stack
 
