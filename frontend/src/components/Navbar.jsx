@@ -9,8 +9,8 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-8 py-4 bg-white/70 backdrop-blur-md border-b border-white/20 shadow-sm">
-            <Link to="/dashboard" className="text-2xl font-bold bg-gradient-to-r from-magical-fuchsia to-magical-violet bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+        <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-8 py-4 bg-black backdrop-blur-md border-b border-neutral-800 shadow-sm">
+            <Link to="/dashboard" className="text-2xl font-bold bg-gradient-to-r from-blue-900 to-blue-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
                 Postificus
             </Link>
             <div className="flex gap-6 items-center">
@@ -23,7 +23,7 @@ const Navbar = () => {
                 <Link to="/settings" className={`${isActive('/settings')} transition-colors`}>
                     Settings
                 </Link>
-                <Link to="/editor" className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-magical-violet to-magical-fuchsia rounded-full shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200">
+                <Link to="/editor" className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-900 to-blue-500 rounded-full shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200">
                     New Post
                 </Link>
             </div>
