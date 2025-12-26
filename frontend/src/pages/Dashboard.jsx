@@ -21,24 +21,24 @@ const Dashboard = () => {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-magical-fuchsia to-magical-violet bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-400 bg-clip-text text-transparent">
                     Dashboard
                 </h1>
-                <p className="text-gray-500 mt-2">Welcome back! Here's how your content is performing.</p>
+                <p className="text-gray-400 mt-2">Welcome back! Here's how your content is performing.</p>
             </div>
 
             {/* Analytics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {analytics.map((item, index) => (
-                    <Card key={index} className="border-none shadow-md hover:shadow-lg transition-shadow bg-white/50 backdrop-blur-sm">
+                    <Card key={index} className="border-white/20 shadow-md hover:shadow-lg transition-shadow bg-neutral-950 backdrop-blur-sm">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-600">
+                            <CardTitle className="text-sm font-medium text-blue-400">
                                 {item.title}
                             </CardTitle>
-                            <item.icon className="h-4 w-4 text-magical-violet" />
+                            <item.icon className="h-4 w-4 text-blue-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-gray-800">{item.value}</div>
+                            <div className="text-2xl font-bold text-gray-200">{item.value}</div>
                             <p className="text-xs text-green-500 font-medium mt-1">
                                 {item.change} from last month
                             </p>
@@ -48,27 +48,27 @@ const Dashboard = () => {
             </div>
 
             {/* Posts List */}
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md border border-white/20 overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-xl font-semibold text-gray-800">Recent Posts</h2>
+            <div className="bg-neutral-950 backdrop-blur-sm rounded-xl shadow-md border border-white/20 overflow-hidden">
+                <div className="p-6 border-b border-white/20">
+                    <h2 className="text-xl font-semibold text-blue-400">Recent Posts</h2>
                 </div>
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-white/20">
                     {posts.map((post) => (
-                        <div key={post.id} className="p-6 flex items-center justify-between hover:bg-white/60 transition-colors">
+                        <div key={post.id} className="p-6 flex items-center justify-between hover:bg-neutral-900 transition-colors">
                             <div>
-                                <h3 className="font-medium text-gray-800 hover:text-magical-violet cursor-pointer transition-colors">
+                                <h3 className="font-medium text-gray-200 hover:text-blue-400 cursor-pointer transition-colors">
                                     {post.title}
                                 </h3>
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className="text-sm text-gray-400 mt-1">
                                     Last edited on {post.date}
                                 </p>
                             </div>
                             <div className="flex items-center gap-4">
-                                <div className="text-sm text-gray-500 flex items-center gap-1">
+                                <div className="text-sm text-gray-400 flex items-center gap-1">
                                     <Eye className="w-4 h-4" /> {post.views}
                                 </div>
                                 <Badge variant={post.status === 'Published' ? 'default' : 'secondary'}
-                                    className={`${post.status === 'Published' ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                                    className={`${post.status === 'Published' ? 'bg-green-900 text-green-400 hover:bg-green-800' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
                                     {post.status}
                                 </Badge>
                             </div>
