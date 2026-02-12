@@ -7,7 +7,7 @@ services:
     env: docker
     plan: free
     dockerContext: .
-    dockerfilePath: Dockerfile
+    dockerfilePath: deploy/Dockerfile.api
     healthCheckPath: /health
     numInstances: 1
     region: oregon
@@ -19,24 +19,27 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: postificus-db
-        property: connectionString
+          property: connectionString
       - key: REDIS_HOST
         fromService:
+          type: pserv
           name: postificus-redis
-        property: host
+          property: host
       - key: REDIS_PORT
         fromService:
+          type: pserv
           name: postificus-redis
-        property: port
+          property: port
       - key: RABBITMQ_HOST
         fromService:
+          type: pserv
           name: postificus-rabbitmq
-        property: host
+          property: host
       - key: RABBITMQ_PORT
         fromService:
+          type: pserv
           name: postificus-rabbitmq
-        property: port
-    startCommand: ./postificus-api
+          property: port
 
   # -------------------------------------------------------
   # 2. THE WORKER (Background Jobs)
@@ -45,7 +48,7 @@ services:
     name: postificus-worker
     env: docker
     dockerContext: .
-    dockerfilePath: Dockerfile
+    dockerfilePath: deploy/Dockerfile.worker
     envVars:
       - key: APP_ENV
         value: production
@@ -54,24 +57,27 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: postificus-db
-        property: connectionString
+          property: connectionString
       - key: REDIS_HOST
         fromService:
+          type: pserv
           name: postificus-redis
-        property: host
+          property: host
       - key: REDIS_PORT
         fromService:
+          type: pserv
           name: postificus-redis
-        property: port
+          property: port
       - key: RABBITMQ_HOST
         fromService:
+          type: pserv
           name: postificus-rabbitmq
-        property: host
+          property: host
       - key: RABBITMQ_PORT
         fromService:
+          type: pserv
           name: postificus-rabbitmq
-        property: port
-    startCommand: ./postificus-worker
+          property: port
 
   # -------------------------------------------------------
   # 3. RABBITMQ (Private Docker Service - Ephemeral)
