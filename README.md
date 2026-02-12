@@ -119,7 +119,7 @@ The system is architected for a modern cloud stack:
 *   **Web Framework:** Echo v4
 *   **Task Queue:** Asynq (Redis)
 *   **Browser Automation:** Go-Rod (Stealth + CDP)
-*   **Database:** PostgreSQL (GORM) & Redis
+*   **Database:** PostgreSQL (pgx) & Redis
 *   **Infrastructure:** Docker, Render, Vercel
 
 

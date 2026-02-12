@@ -8,118 +8,117 @@ import (
 	"os/signal"
 	"time"
 
-	"postificus/internal/database"
-	"postificus/internal/handlers"
+	"postificus/internal/controller"
 	"postificus/internal/middleware"
-	"postificus/internal/queue"
+	"postificus/internal/rabbitmq"
+	"postificus/internal/service"
+	"postificus/internal/storage"
 
-	"github.com/hibiken/asynq"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/time/rate"
 )
 
 func main() {
-	// Load .env file
+	// 1. Config & Infrastructure
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, creating one if config is saved.")
+		log.Println("No .env file found")
 	}
 
-	// Initialize Database
-	if err := database.InitDB(); err != nil {
-		log.Fatal("Failed to initialize database:", err)
+	if err := storage.InitDB(); err != nil {
+		log.Fatal("Failed to init DB:", err)
 	}
-	defer database.CloseDB()
+	defer storage.CloseDB()
 
-	// Initialize Redis
-	if err := database.InitRedis(); err != nil {
-		log.Fatal("Failed to initialize Redis:", err)
+	if err := storage.InitRedis(); err != nil {
+		log.Fatal("Failed to init Redis:", err)
 	}
-	defer database.CloseRedis()
+	defer storage.CloseRedis()
 
-	// Initialize LLM Summarizer (Optional for API, but used for content generation)
-	// summarizer, err := llm.NewSummarizer(context.Background())
-	// if err != nil {
-	// 	log.Println("Warning: Failed to initialize LLM Summarizer (check GEMINI_API_KEY):", err)
-	// }
+	// 2. RabbitMQ (Producer Only)
+	rabbitAddr := os.Getenv("RABBITMQ_URL")
+	if rabbitAddr == "" {
+		rabbitAddr = "amqp://guest:guest@localhost:5672/"
+	}
+	// Simple retry loop
+	var rabbitConn *rabbitmq.Connection
+	var err error
+	for i := 0; i < 5; i++ {
+		rabbitConn, err = rabbitmq.NewConnection(rabbitAddr)
+		if err == nil {
+			break
+		}
+		log.Printf("Waiting for RabbitMQ... (%v)", err)
+		time.Sleep(2 * time.Second)
+	}
+	if err != nil {
+		log.Fatal("Failed to connect to RabbitMQ:", err)
+	}
+	defer rabbitConn.Close()
+	producer := rabbitmq.NewProducer(rabbitConn)
 
-	// Setup Echo
+	// 3. DI Container (Manual)
+
+	// Repositories
+	credsRepo := storage.NewCredentialsRepository()
+	draftRepo := storage.NewDraftRepository()
+	profileRepo := storage.NewProfileRepository()
+
+	// Services
+	authService := service.NewAuthService(credsRepo)
+	draftService := service.NewDraftService(draftRepo)
+	profileService := service.NewProfileService(profileRepo)
+	activityService := service.NewActivityService(credsRepo)
+
+	// Controllers
+	authController := controller.NewAuthController(authService)
+	settingsController := controller.NewSettingsController(authService, profileService)
+	draftController := controller.NewDraftController(draftService)
+	activityController := controller.NewActivityController(activityService)
+	dashboardController := controller.NewDashboardController(activityService, producer)
+	publishController := controller.NewPublishController(producer)
+
+	// 4. Server Setup
 	e := echo.New()
 	e.Use(echoMiddleware.Logger())
 	e.Use(echoMiddleware.Recover())
 	e.Use(echoMiddleware.CORS())
+	e.Use(middleware.RateLimit(middleware.NewRateLimiter(rate.Limit(20), 50)))
+	e.Use(middleware.PrometheusMiddleware)
 
-	// Rate Limiting (20 req/sec burst 50)
-	rateLimiter := middleware.NewRateLimiter(rate.Limit(20), 50)
-	e.Use(middleware.RateLimit(rateLimiter))
-
-	// Routes
+	// 5. Routes
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
 
-	// Drafts (Auto-Save)
-	e.PUT("/api/drafts/:id", handlers.UpdateDraft)
+	// Auth & Connect
+	e.POST("/api/connect/:platform", authController.HandleConnectPlatform) // Unified
 
-	// Config Endpoints
-	e.POST("/api/settings/credentials", handlers.SaveCredentials)
-	e.GET("/api/settings/credentials/:platform", handlers.GetCredentialsStatus)
+	// Settings & Profile
+	e.POST("/api/settings/credentials", settingsController.SaveCredentials) // Manual override
+	e.GET("/api/settings/credentials/:platform", settingsController.GetCredentialsStatus)
+	e.GET("/api/profile", settingsController.GetProfile)
+	e.PUT("/api/profile", settingsController.SaveProfile)
 
-	// Legacy endpoint (can be deprecated or redirected)
-	e.POST("/config/devto", func(c echo.Context) error {
-		// Redirect to new handler logic if needed, or keep for backward compatibility
-		// For now, we'll just map it to the new handler structure manually or leave as is
-		// But let's leave it as is to avoid breaking existing frontend immediately
-		return c.JSON(http.StatusOK, map[string]string{"status": "saved"})
-	})
+	// Drafts
+	e.PUT("/api/drafts/:id", draftController.UpdateDraft)
+	e.GET("/api/drafts/:id", draftController.GetDraft)
 
-	// Publish Endpoints (Enqueue tasks instead of direct execution)
-	// Publish Endpoints (Enqueue tasks)
-	e.POST("/publish/:platform", func(c echo.Context) error {
-		platform := c.Param("platform")
+	// Dashboard & Activity
+	e.GET("/api/dashboard/activity", dashboardController.GetDashboardActivity)
+	e.POST("/api/dashboard/sync", dashboardController.TriggerSync)
 
-		var req struct {
-			Title   string   `json:"title"`
-			Content string   `json:"content"`
-			Tags    []string `json:"tags"`
-			BlogURL string   `json:"blog_url"`
-		}
-		if err := c.Bind(&req); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request"})
-		}
+	// Live Activity (Platform specific)
+	e.GET("/api/devto/activity", activityController.GetDevtoActivity)
+	e.GET("/api/medium/activity", activityController.GetMediumActivity)
 
-		// Create Task Payload
-		payload := queue.PublishPayload{
-			UserID:   1, // Hardcoded for MVP
-			Platform: platform,
-			Title:    req.Title,
-			Content:  req.Content,
-			Tags:     req.Tags,
-			BlogURL:  req.BlogURL,
-		}
+	// Publishing
+	e.POST("/api/publish/:platform", publishController.PublishPost)
 
-		// Enqueue Task
-		client := asynq.NewClient(asynq.RedisClientOpt{Addr: os.Getenv("REDIS_URL")})
-		defer client.Close()
-
-		task, err := queue.NewPublishTask(payload)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to create task"})
-		}
-
-		info, err := client.Enqueue(task)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to enqueue task"})
-		}
-
-		return c.JSON(http.StatusOK, map[string]interface{}{
-			"status":  "queued",
-			"task_id": info.ID,
-		})
-	})
-
-	// Start server
+	// 6. Start
 	go func() {
 		port := os.Getenv("PORT")
 		if port == "" {
@@ -130,7 +129,7 @@ func main() {
 		}
 	}()
 
-	// Graceful Shutdown
+	// 7. Cleanup
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit

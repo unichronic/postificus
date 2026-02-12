@@ -14,14 +14,14 @@ const Navbar = () => {
             <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-brand/40 via-brand/10 to-transparent" />
             <div className="relative mx-auto w-full max-w-7xl px-6 md:px-8">
                 <div className="flex items-center justify-between py-5 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
-                    <Link to="/dashboard" className="flex items-center gap-3 text-2xl font-semibold text-gray-900 hover:text-brand transition-colors font-heading">
-                        <img
-                            src="/quill-drawing-a-line.png"
-                            alt="Postificus quill"
-                            className="landing-quill-logo h-6 w-6 object-contain"
-                        />
-                        Postificus
-                    </Link>
+                <Link to="/" className="flex items-center gap-3 text-2xl font-semibold text-gray-900 hover:text-brand transition-colors font-heading">
+                    <img
+                        src="/quill-drawing-a-line.png"
+                        alt="Postificus quill"
+                        className="landing-quill-logo h-6 w-6 object-contain"
+                    />
+                    Postificus
+                </Link>
                     <div className="hidden md:flex gap-8 items-center text-base justify-self-center">
                         <Link to="/dashboard" className={`${isActive('/dashboard')} transition-colors`}>
                             Dashboard

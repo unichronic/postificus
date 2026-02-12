@@ -37,6 +37,7 @@ const Editor = ({ draftId, isExistingDraft = false }) => {
     });
     const [saveStatus, setSaveStatus] = useState('saved'); // 'saved', 'saving', 'unsaved'
     const [draftReady, setDraftReady] = useState(!isExistingDraft);
+    const imageInputRef = useRef(null);
     const hasLoadedDraft = useRef(false);
 
     const editor = useEditor({
@@ -243,10 +244,26 @@ const Editor = ({ draftId, isExistingDraft = false }) => {
     );
 
     const addImage = () => {
-        const url = window.prompt('URL');
-        if (url) {
-            editor.chain().focus().setImage({ src: url }).run();
+        if (imageInputRef.current) {
+            imageInputRef.current.value = '';
+            imageInputRef.current.click();
         }
+    };
+
+    const handleInlineImage = (event) => {
+        const file = event.target.files?.[0];
+        if (!file || !file.type.startsWith('image/')) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const src = typeof reader.result === 'string' ? reader.result : '';
+            if (src) {
+                editor.chain().focus().setImage({ src }).run();
+            }
+        };
+        reader.readAsDataURL(file);
     };
 
     const setLink = () => {
@@ -343,8 +360,7 @@ const Editor = ({ draftId, isExistingDraft = false }) => {
                 <div className="rounded-2xl border border-gray-200/50 bg-white/85 px-6 py-4 md:px-8 md:py-5">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p className="text-sm uppercase tracking-[0.25em] text-brand/70">Writing</p>
-                            <h2 className="mt-2 text-lg font-semibold text-gray-900 font-heading">Content</h2>
+                            <p className="text-sm uppercase tracking-[0.25em] text-brand/70">Content</p>
                         </div>
                     </div>
 
@@ -402,6 +418,13 @@ const Editor = ({ draftId, isExistingDraft = false }) => {
                                     isActive={false}
                                     icon={ImageIcon}
                                     title="Image"
+                                />
+                                <input
+                                    ref={imageInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleInlineImage}
                                 />
                             </div>
                         </div>

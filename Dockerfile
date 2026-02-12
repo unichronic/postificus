@@ -14,14 +14,16 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o postificus-api ./cmd/api/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -o postificus-worker ./cmd/worker/main.go
 
-# Stage 2: Run (Tiny Image)
+
+
+# -------------------------------------------------------
+# Stage 2: Run (Alpine)
+# -------------------------------------------------------
 FROM alpine:latest
 
-WORKDIR /root/
-ENV APP_ENV=production
+WORKDIR /app
 
 # Install Chromium/Chrome dependencies for Rod (CRITICAL for Alpine)
-# Rod needs these libraries to run the browser even if Chrome is downloaded separately
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -30,13 +32,12 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont
 
-# Copy binaries from builder
+# Copy binaries
 COPY --from=builder /app/postificus-api .
 COPY --from=builder /app/postificus-worker .
-
 
 # Expose API port
 EXPOSE 8080
 
-# Default command (can be overridden in compose)
+# Command is set by docker-compose (either api or worker)
 CMD ["./postificus-api"]
