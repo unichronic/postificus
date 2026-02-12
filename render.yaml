@@ -79,7 +79,8 @@ services:
   - type: pserv
     name: postificus-rabbitmq
     env: docker
-    image: rabbitmq:3-management-alpine
+    dockerfilePath: deploy/Dockerfile.rabbitmq
+    dockerContext: .
     envVars:
       - key: RABBITMQ_DEFAULT_USER
         value: guest
@@ -92,7 +93,8 @@ services:
   - type: pserv
     name: postificus-redis
     env: docker
-    image: redis:7-alpine
+    dockerfilePath: deploy/Dockerfile.redis
+    dockerContext: .
 
 databases:
   # -------------------------------------------------------
