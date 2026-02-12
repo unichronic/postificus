@@ -14,7 +14,16 @@ var RedisClient *redis.Client
 func InitRedis() error {
 	redisAddr := os.Getenv("REDIS_URL")
 	if redisAddr == "" {
-		redisAddr = "localhost:6379" // Default fallback
+		host := os.Getenv("REDIS_HOST")
+		port := os.Getenv("REDIS_PORT")
+		if host != "" {
+			if port == "" {
+				port = "6379"
+			}
+			redisAddr = fmt.Sprintf("%s:%s", host, port)
+		} else {
+			redisAddr = "localhost:6379" // Default fallback
+		}
 	}
 
 	RedisClient = redis.NewClient(&redis.Options{

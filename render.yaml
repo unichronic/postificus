@@ -19,12 +19,18 @@ services:
       - key: DATABASE_URL
         fromDatabase: postificus-db
         property: connectionString
-      - key: REDIS_URL
+      - key: REDIS_HOST
         fromService: postificus-redis
-        property: connectionString
-      - key: RABBITMQ_URL
+        property: host
+      - key: REDIS_PORT
+        fromService: postificus-redis
+        property: port
+      - key: RABBITMQ_HOST
         fromService: postificus-rabbitmq
-        property: connectionString
+        property: host
+      - key: RABBITMQ_PORT
+        fromService: postificus-rabbitmq
+        property: port
     startCommand: ./postificus-api
 
   # -------------------------------------------------------
@@ -38,17 +44,23 @@ services:
     envVars:
       - key: APP_ENV
         value: production
-      - key: BROWSER_HEADLESS
-        value: "true"
+      - key: PORT
+        value: 10000
       - key: DATABASE_URL
         fromDatabase: postificus-db
         property: connectionString
-      - key: REDIS_URL
+      - key: REDIS_HOST
         fromService: postificus-redis
-        property: connectionString
-      - key: RABBITMQ_URL
+        property: host
+      - key: REDIS_PORT
+        fromService: postificus-redis
+        property: port
+      - key: RABBITMQ_HOST
         fromService: postificus-rabbitmq
-        property: connectionString
+        property: host
+      - key: RABBITMQ_PORT
+        fromService: postificus-rabbitmq
+        property: port
     startCommand: ./postificus-worker
 
   # -------------------------------------------------------

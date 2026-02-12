@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -40,7 +41,17 @@ func main() {
 	// 2. RabbitMQ (Producer Only)
 	rabbitAddr := os.Getenv("RABBITMQ_URL")
 	if rabbitAddr == "" {
-		rabbitAddr = "amqp://guest:guest@localhost:5672/"
+		host := os.Getenv("RABBITMQ_HOST")
+		port := os.Getenv("RABBITMQ_PORT")
+		if host != "" {
+			if port == "" {
+				port = "5672"
+			}
+			// Default guest/guest for private service
+			rabbitAddr = fmt.Sprintf("amqp://guest:guest@%s:%s/", host, port)
+		} else {
+			rabbitAddr = "amqp://guest:guest@localhost:5672/"
+		}
 	}
 	// Simple retry loop
 	var rabbitConn *rabbitmq.Connection
