@@ -1,0 +1,82 @@
+services:
+  # -------------------------------------------------------
+  # 1. THE API SERVER
+  # -------------------------------------------------------
+  - type: web
+    name: postificus-api
+    env: docker
+    plan: free
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    healthCheckPath: /health
+    numInstances: 1
+    region: oregon
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase: postificus-db
+        property: connectionString
+      - key: REDIS_URL
+        fromService: postificus-redis
+        property: connectionString
+      - key: RABBITMQ_URL
+        fromService: postificus-rabbitmq
+        property: connectionString
+    startCommand: ./postificus-api
+
+  # -------------------------------------------------------
+  # 2. THE WORKER (Background Jobs)
+  # -------------------------------------------------------
+  - type: worker
+    name: postificus-worker
+    env: docker
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: BROWSER_HEADLESS
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase: postificus-db
+        property: connectionString
+      - key: REDIS_URL
+        fromService: postificus-redis
+        property: connectionString
+      - key: RABBITMQ_URL
+        fromService: postificus-rabbitmq
+        property: connectionString
+    startCommand: ./postificus-worker
+
+  # -------------------------------------------------------
+  # 3. RABBITMQ (Private Docker Service - Ephemeral)
+  # -------------------------------------------------------
+  - type: pserv
+    name: postificus-rabbitmq
+    env: docker
+    image: rabbitmq:3-management-alpine
+    envVars:
+      - key: RABBITMQ_DEFAULT_USER
+        value: guest
+      - key: RABBITMQ_DEFAULT_PASS
+        value: guest
+
+  # -------------------------------------------------------
+  # 4. REDIS (Private Docker Service - Ephemeral)
+  # -------------------------------------------------------
+  - type: pserv
+    name: postificus-redis
+    env: docker
+    image: redis:7-alpine
+
+databases:
+  # -------------------------------------------------------
+  # 5. MANAGED POSTGRESQL (Simplest for now)
+  # -------------------------------------------------------
+  - name: postificus-db
+    databaseName: postificus
+    user: postificus_admin
+    plan: free # 90 days limit on free tier
