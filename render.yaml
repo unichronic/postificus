@@ -17,19 +17,24 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        fromDatabase: postificus-db
+        fromDatabase:
+          name: postificus-db
         property: connectionString
       - key: REDIS_HOST
-        fromService: postificus-redis
+        fromService:
+          name: postificus-redis
         property: host
       - key: REDIS_PORT
-        fromService: postificus-redis
+        fromService:
+          name: postificus-redis
         property: port
       - key: RABBITMQ_HOST
-        fromService: postificus-rabbitmq
+        fromService:
+          name: postificus-rabbitmq
         property: host
       - key: RABBITMQ_PORT
-        fromService: postificus-rabbitmq
+        fromService:
+          name: postificus-rabbitmq
         property: port
     startCommand: ./postificus-api
 
@@ -47,19 +52,24 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        fromDatabase: postificus-db
+        fromDatabase:
+          name: postificus-db
         property: connectionString
       - key: REDIS_HOST
-        fromService: postificus-redis
+        fromService:
+          name: postificus-redis
         property: host
       - key: REDIS_PORT
-        fromService: postificus-redis
+        fromService:
+          name: postificus-redis
         property: port
       - key: RABBITMQ_HOST
-        fromService: postificus-rabbitmq
+        fromService:
+          name: postificus-rabbitmq
         property: host
       - key: RABBITMQ_PORT
-        fromService: postificus-rabbitmq
+        fromService:
+          name: postificus-rabbitmq
         property: port
     startCommand: ./postificus-worker
 
