@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
-import { Bold, Italic, Heading2, List, Quote, Code, Link as LinkIcon, Image as ImageIcon, Save, Send, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Bold, Italic, Heading2, List, Quote, Code, Link as LinkIcon, Image as ImageIcon, Save, Send, CheckCircle, Loader2 } from 'lucide-react';
 import CoverImage from './CoverImage';
 import TagInput from './TagInput';
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Simple debounce hook
 const useDebounce = (value, delay) => {
@@ -24,13 +22,22 @@ const useDebounce = (value, delay) => {
     return debouncedValue;
 };
 
-const Editor = ({ draftId }) => {
+const Editor = ({ draftId, isExistingDraft = false }) => {
     const [title, setTitle] = useState('');
     const [coverImage, setCoverImage] = useState('');
     const [tags, setTags] = useState([]);
     const [isPublishing, setIsPublishing] = useState(false);
-    const [platform, setPlatform] = useState('linkedin');
+    const [isPublishOpen, setIsPublishOpen] = useState(false);
+    const [publishError, setPublishError] = useState('');
+    const [isEditorEmpty, setIsEditorEmpty] = useState(true);
+    const [selectedPlatforms, setSelectedPlatforms] = useState({
+        linkedin: false,
+        medium: false,
+        devto: false,
+    });
     const [saveStatus, setSaveStatus] = useState('saved'); // 'saved', 'saving', 'unsaved'
+    const [draftReady, setDraftReady] = useState(!isExistingDraft);
+    const hasLoadedDraft = useRef(false);
 
     const editor = useEditor({
         extensions: [
@@ -40,14 +47,18 @@ const Editor = ({ draftId }) => {
                 openOnClick: false,
             }),
         ],
-        content: '<p>Start writing your magical story...</p>',
+        content: '',
         editorProps: {
             attributes: {
-                class: 'prose prose-lg max-w-none focus:outline-none min-h-[50vh] p-4 text-gray-700',
+                class: 'prose prose-base prose-slate max-w-none focus:outline-none min-h-[50vh] p-5 text-gray-800 leading-relaxed',
             },
         },
-        onUpdate: () => {
+        onCreate: ({ editor }) => {
+            setIsEditorEmpty(editor.isEmpty);
+        },
+        onUpdate: ({ editor }) => {
             setSaveStatus('unsaved');
+            setIsEditorEmpty(editor.isEmpty);
         },
     });
 
@@ -62,60 +73,113 @@ const Editor = ({ draftId }) => {
         setSaveStatus('saving');
         try {
             const content = editor.getHTML();
-            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/drafts/${draftId}`, {
+            const publishTargets = Object.entries(selectedPlatforms)
+                .filter(([, enabled]) => enabled)
+                .map(([key]) => key);
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/drafts/${draftId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title,
                     content,
                     cover_image: coverImage,
-                    tags
+                    tags,
+                    publish_targets: publishTargets
                 })
             });
+            if (!response.ok) {
+                throw new Error(`Save failed with status ${response.status}`);
+            }
             setSaveStatus('saved');
         } catch (error) {
             console.error("Auto-save failed:", error);
             setSaveStatus('unsaved');
         }
-    }, [draftId, editor, title, coverImage, tags]);
+    }, [draftId, editor, title, coverImage, tags, selectedPlatforms]);
 
     useEffect(() => {
+        if (!draftReady) return;
         if (debouncedTitle || debouncedContent || debouncedTags) {
             saveDraft();
         }
-    }, [debouncedTitle, debouncedContent, debouncedTags, saveDraft]);
+    }, [debouncedTitle, debouncedContent, debouncedTags, saveDraft, draftReady]);
+
+    useEffect(() => {
+        if (!isExistingDraft || !draftId || !editor || hasLoadedDraft.current) return;
+
+        const loadDraft = async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/drafts/${draftId}`);
+                if (!response.ok) {
+                    setDraftReady(true);
+                    return;
+                }
+                const data = await response.json();
+                if (data.title) {
+                    setTitle(data.title);
+                }
+                if (data.content) {
+                    editor.commands.setContent(data.content, false);
+                }
+                if (data.cover_image) {
+                    setCoverImage(data.cover_image);
+                }
+                if (Array.isArray(data.publish_targets)) {
+                    setSelectedPlatforms({
+                        linkedin: data.publish_targets.includes('linkedin'),
+                        medium: data.publish_targets.includes('medium'),
+                        devto: data.publish_targets.includes('devto'),
+                    });
+                }
+                setIsEditorEmpty(editor.isEmpty);
+                setSaveStatus('saved');
+                hasLoadedDraft.current = true;
+                setDraftReady(true);
+            } catch (error) {
+                console.error("Failed to load draft:", error);
+                setDraftReady(true);
+            }
+        };
+
+        loadDraft();
+    }, [draftId, editor, isExistingDraft]);
 
 
-    const handlePublish = async () => {
+    const handlePublish = async (platforms) => {
         if (!editor || !title) {
             alert('Please add a title before publishing');
             return;
         }
 
+        if (!platforms.length) {
+            setPublishError('Select at least one platform.');
+            return;
+        }
+
+        setPublishError('');
         setIsPublishing(true);
         const content = editor.getHTML();
 
-        try {
-            // Determine endpoint based on platform
-            // In a real app, we might have a unified /publish endpoint that takes platform as a param
-            // But our backend currently has specific endpoints or a generic one.
-            // Let's assume we use the generic /publish/linkedin for now as per the blueprint example,
-            // or we can adapt to the new generic worker task structure.
-            // For this implementation, we'll route to the specific platform endpoint if it exists,
-            // or a generic one.
+        const payload = {
+            title,
+            content,
+            cover_image: coverImage,
+            blog_url: '',
+            blog_content: content,
+        };
 
-            let endpoint = '/publish/linkedin';
-            let payload = {
-                title,
-                content,
-                blog_url: '', // Optional
-                blog_content: content // Legacy support if needed
-            };
+        const platformLabels = {
+            linkedin: 'LinkedIn',
+            medium: 'Medium',
+            devto: 'Dev.to',
+        };
 
-            if (platform === 'medium') {
-                endpoint = '/publish/medium';
-            } else if (platform === 'devto') {
-                endpoint = '/publish/devto';
+        const publishToPlatform = async (platformKey) => {
+            let endpoint = '/api/publish/linkedin';
+            if (platformKey === 'medium') {
+                endpoint = '/api/publish/medium';
+            } else if (platformKey === 'devto') {
+                endpoint = '/api/publish/devto';
             }
 
             const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}${endpoint}`, {
@@ -124,12 +188,32 @@ const Editor = ({ draftId }) => {
                 body: JSON.stringify(payload)
             });
 
-            const data = await response.json();
+            if (!response.ok) {
+                let errorMessage = 'Unknown error';
+                try {
+                    const data = await response.json();
+                    errorMessage = data.error || errorMessage;
+                } catch (err) {
+                    errorMessage = response.statusText || errorMessage;
+                }
+                throw new Error(errorMessage);
+            }
+        };
 
-            if (response.ok) {
-                alert(`Successfully queued for ${platform}!`);
+        try {
+            const results = await Promise.allSettled(platforms.map((platformKey) => publishToPlatform(platformKey)));
+            const failed = results
+                .map((result, index) => (result.status === 'rejected' ? platforms[index] : null))
+                .filter(Boolean);
+
+            if (failed.length === 0) {
+                alert(`Successfully queued for ${platforms.map((p) => platformLabels[p]).join(', ')}.`);
+                setIsPublishOpen(false);
             } else {
-                alert('Failed to publish: ' + (data.error || 'Unknown error'));
+                const succeeded = platforms.filter((p) => !failed.includes(p));
+                const successLabel = succeeded.length ? `Queued for ${succeeded.map((p) => platformLabels[p]).join(', ')}.` : '';
+                const failedLabel = `Failed for ${failed.map((p) => platformLabels[p]).join(', ')}.`;
+                alert([successLabel, failedLabel].filter(Boolean).join(' '));
             }
         } catch (e) {
             console.error(e);
@@ -146,13 +230,15 @@ const Editor = ({ draftId }) => {
     const ToolbarButton = ({ onClick, isActive, icon: Icon, title }) => (
         <button
             onClick={onClick}
+            type="button"
             title={title}
-            className={`p-2 rounded-lg transition-all duration-200 ${isActive
-                ? 'bg-magical-violet/10 text-magical-violet shadow-sm'
-                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+            aria-label={title}
+            className={`p-2 rounded-md transition-all duration-200 ${isActive
+                ? 'bg-brand/15 text-brand'
+                : 'text-gray-600 hover:bg-gray-100/80 hover:text-gray-800'
                 }`}
         >
-            <Icon className="w-5 h-5" />
+            <Icon className="w-4 h-4" />
         </button>
     );
 
@@ -179,125 +265,231 @@ const Editor = ({ draftId }) => {
         editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
     };
 
+    const togglePlatform = (key) => {
+        setSelectedPlatforms((prev) => ({ ...prev, [key]: !prev[key] }));
+        setPublishError('');
+    };
+
+    const confirmPublish = async () => {
+        const platforms = Object.keys(selectedPlatforms).filter((key) => selectedPlatforms[key]);
+        await handlePublish(platforms);
+    };
+
+    const selectedCount = Object.values(selectedPlatforms).filter(Boolean).length;
+
     return (
-        <div className="max-w-4xl mx-auto py-12 px-6">
-            <div className="flex justify-between items-center mb-8">
-                <div className="flex items-center gap-4">
-                    <RouterLink to="/dashboard">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-gray-100">
-                            <ArrowLeft className="w-5 h-5 text-gray-600" />
-                        </Button>
-                    </RouterLink>
-                    <div className="flex items-center gap-2">
-                        {saveStatus === 'saving' && <Loader2 className="w-3 h-3 animate-spin text-gray-400" />}
-                        {saveStatus === 'saved' && <CheckCircle className="w-3 h-3 text-green-500" />}
-                        {saveStatus === 'unsaved' && <div className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></div>}
-                        <span className="text-sm font-medium text-gray-500">
-                            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved' : 'Unsaved changes'}
-                        </span>
+        <>
+            <div className="max-w-6xl mx-auto py-10 px-6 space-y-6">
+                <div className="relative rounded-2xl border border-gray-200/50 bg-white/85 p-6 md:p-8">
+                    <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p className="text-sm uppercase tracking-[0.3em] text-brand/80">Editor</p>
+                            <h1 className="mt-3 text-3xl font-semibold text-gray-900 font-heading">Shape your next post</h1>
+                            <p className="text-gray-500 mt-2 text-base leading-relaxed max-w-2xl">
+                                Draft with focus, refine with clarity, and publish when you are ready.
+                            </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            <div className="flex items-center gap-2 rounded-full border border-gray-200/60 bg-white/85 px-3 py-1.5 text-xs text-gray-600">
+                                {saveStatus === 'saving' && <Loader2 className="w-3 h-3 animate-spin text-gray-400" />}
+                                {saveStatus === 'saved' && <CheckCircle className="w-3 h-3 text-brand" />}
+                                {saveStatus === 'unsaved' && <div className="w-3 h-3 rounded-full bg-brand/40 animate-pulse"></div>}
+                                <span className="text-xs font-medium">
+                                    {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved' : 'Unsaved changes'}
+                                </span>
+                            </div>
+                            <div className="flex gap-3">
+                                <Button variant="ghost" className="text-gray-700 text-sm px-3 py-2" onClick={saveDraft}>
+                                    <Save className="w-4 h-4 mr-2" />
+                                    Save Draft
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        setPublishError('');
+                                        setIsPublishOpen(true);
+                                    }}
+                                    disabled={isPublishing}
+                                    className="bg-brand hover:bg-brand-dark text-white transition-colors px-4 py-2 text-sm"
+                                >
+                                    <Send className="w-4 h-4 mr-2" />
+                                    {isPublishing ? 'Publishing...' : 'Publish'}
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div className="flex gap-3 items-center">
-                    <Select value={platform} onValueChange={setPlatform}>
-                        <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Platform" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="linkedin">LinkedIn</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="devto">Dev.to</SelectItem>
-                        </SelectContent>
-                    </Select>
 
-                    <Button variant="ghost" className="text-gray-600" onClick={saveDraft}>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save Draft
-                    </Button>
-                    <Button
-                        onClick={handlePublish}
-                        disabled={isPublishing}
-                        className="bg-gradient-to-r from-magical-violet to-magical-fuchsia text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-                    >
-                        <Send className="w-4 h-4 mr-2" />
-                        {isPublishing ? 'Publishing...' : 'Publish'}
-                    </Button>
+                <div className="rounded-2xl border border-gray-200/50 bg-white/85 px-6 py-4 md:px-8 md:py-5 space-y-4">
+                    <CoverImage url={coverImage} onUpdate={setCoverImage} />
+
+                    <div className="space-y-2">
+                        <p className="text-sm uppercase tracking-[0.25em] text-brand/70">Title</p>
+                        <input
+                            type="text"
+                            placeholder="Article Title..."
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            aria-label="Article title"
+                            className="text-[2.75rem] font-semibold w-full bg-transparent border-none outline-none placeholder-gray-300 text-gray-900 leading-tight font-heading"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <p className="text-sm uppercase tracking-[0.25em] text-brand/70">Tags</p>
+                        <TagInput tags={tags} setTags={setTags} />
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-gray-200/50 bg-white/85 px-6 py-4 md:px-8 md:py-5">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <p className="text-sm uppercase tracking-[0.25em] text-brand/70">Writing</p>
+                            <h2 className="mt-2 text-lg font-semibold text-gray-900 font-heading">Content</h2>
+                        </div>
+                    </div>
+
+                    <div className="mt-5 relative group">
+                        <div className="sticky top-24 z-10 mb-4 flex flex-wrap gap-2 rounded-full border border-gray-200/60 bg-white/85 px-3 py-1.5">
+                            <div className="flex items-center gap-1 rounded-full bg-gray-50/80 px-2 py-1">
+                                <ToolbarButton
+                                    onClick={() => editor.chain().focus().toggleBold().run()}
+                                    isActive={editor.isActive('bold')}
+                                    icon={Bold}
+                                    title="Bold"
+                                />
+                                <ToolbarButton
+                                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                                    isActive={editor.isActive('italic')}
+                                    icon={Italic}
+                                    title="Italic"
+                                />
+                            </div>
+                            <div className="flex items-center gap-1 rounded-full bg-gray-50/80 px-2 py-1">
+                                <ToolbarButton
+                                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                                    isActive={editor.isActive('heading', { level: 2 })}
+                                    icon={Heading2}
+                                    title="Heading 2"
+                                />
+                                <ToolbarButton
+                                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                                    isActive={editor.isActive('bulletList')}
+                                    icon={List}
+                                    title="Bullet List"
+                                />
+                                <ToolbarButton
+                                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                                    isActive={editor.isActive('blockquote')}
+                                    icon={Quote}
+                                    title="Quote"
+                                />
+                                <ToolbarButton
+                                    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                                    isActive={editor.isActive('codeBlock')}
+                                    icon={Code}
+                                    title="Code Block"
+                                />
+                            </div>
+                            <div className="flex items-center gap-1 rounded-full bg-gray-50/80 px-2 py-1">
+                                <ToolbarButton
+                                    onClick={setLink}
+                                    isActive={editor.isActive('link')}
+                                    icon={LinkIcon}
+                                    title="Link"
+                                />
+                                <ToolbarButton
+                                    onClick={addImage}
+                                    isActive={false}
+                                    icon={ImageIcon}
+                                    title="Image"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="relative min-h-[50vh]">
+                            {isEditorEmpty && (
+                                <div className="pointer-events-none absolute top-0 left-0 select-none p-5 text-gray-400">
+                                    Start writing...
+                                </div>
+                            )}
+                            <EditorContent editor={editor} />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <CoverImage url={coverImage} onUpdate={setCoverImage} />
+            {isPublishOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+                    <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-5 shadow-lg">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900 font-heading">Publish to platforms</h2>
+                                <p className="text-sm text-gray-500 mt-1">Choose where you want to publish this post.</p>
+                            </div>
+                            <button
+                                type="button"
+                                className="text-gray-400 hover:text-gray-600"
+                                onClick={() => {
+                                    setIsPublishOpen(false);
+                                    setPublishError('');
+                                }}
+                                aria-label="Close publish dialog"
+                            >
+                                x
+                            </button>
+                        </div>
 
-            <div className="space-y-6">
-                <input
-                    type="text"
-                    placeholder="Article Title..."
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="text-5xl font-extrabold w-full bg-transparent border-none outline-none placeholder-gray-300 text-gray-800 leading-tight"
-                />
+                        <div className="mt-5 space-y-3">
+                            {[
+                                { key: 'linkedin', label: 'LinkedIn' },
+                                { key: 'medium', label: 'Medium' },
+                                { key: 'devto', label: 'Dev.to' },
+                            ].map((platform) => (
+                                <label
+                                    key={platform.key}
+                                    className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                    <span>{platform.label}</span>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedPlatforms[platform.key]}
+                                        onChange={() => togglePlatform(platform.key)}
+                                        className="h-4 w-4 accent-brand"
+                                    />
+                                </label>
+                            ))}
+                        </div>
 
-                <TagInput tags={tags} setTags={setTags} />
+                        {publishError && (
+                            <p className="mt-3 text-sm text-brand-dark">{publishError}</p>
+                        )}
 
-                <div className="relative group">
-                    {/* Floating Toolbar */}
-                    <div className="sticky top-24 z-10 mx-auto max-w-fit mb-6 px-4 py-2 bg-white/80 backdrop-blur-md border border-gray-200/50 shadow-lg rounded-full flex gap-1 transition-all">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleBold().run()}
-                            isActive={editor.isActive('bold')}
-                            icon={Bold}
-                            title="Bold"
-                        />
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleItalic().run()}
-                            isActive={editor.isActive('italic')}
-                            icon={Italic}
-                            title="Italic"
-                        />
-                        <div className="w-px h-6 bg-gray-200 my-auto mx-1"></div>
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                            isActive={editor.isActive('heading', { level: 2 })}
-                            icon={Heading2}
-                            title="Heading 2"
-                        />
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleBulletList().run()}
-                            isActive={editor.isActive('bulletList')}
-                            icon={List}
-                            title="Bullet List"
-                        />
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                            isActive={editor.isActive('blockquote')}
-                            icon={Quote}
-                            title="Quote"
-                        />
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                            isActive={editor.isActive('codeBlock')}
-                            icon={Code}
-                            title="Code Block"
-                        />
-                        <div className="w-px h-6 bg-gray-200 my-auto mx-1"></div>
-                        <ToolbarButton
-                            onClick={setLink}
-                            isActive={editor.isActive('link')}
-                            icon={LinkIcon}
-                            title="Link"
-                        />
-                        <ToolbarButton
-                            onClick={addImage}
-                            isActive={false}
-                            icon={ImageIcon}
-                            title="Image"
-                        />
-                    </div>
-
-                    <div className="min-h-[60vh]">
-                        <EditorContent editor={editor} />
+                        <div className="mt-6 flex items-center justify-between">
+                            <span className="text-xs text-gray-500">{selectedCount} selected</span>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => {
+                                        setIsPublishOpen(false);
+                                        setPublishError('');
+                                    }}
+                                    className="text-gray-700 text-sm px-3 py-2"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={confirmPublish}
+                                    disabled={isPublishing || selectedCount === 0}
+                                    className="bg-brand hover:bg-brand-dark text-white text-sm px-4 py-2"
+                                >
+                                    {isPublishing ? 'Publishing...' : 'Publish'}
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            )}
+        </>
     );
 };
 

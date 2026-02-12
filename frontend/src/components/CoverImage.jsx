@@ -1,14 +1,36 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Image as ImageIcon, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const CoverImage = ({ url, onUpdate }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const fileInputRef = useRef(null);
 
     const handleUpload = () => {
-        // Mock upload for now - in real app would upload to server/S3
-        const mockUrl = "https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-        onUpdate(mockUrl);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+            return;
+        }
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = typeof reader.result === 'string' ? reader.result : '';
+            if (result) {
+                onUpdate(result);
+            }
+        };
+        reader.readAsDataURL(file);
     };
 
     const handleRemove = (e) => {
@@ -19,18 +41,25 @@ const CoverImage = ({ url, onUpdate }) => {
     if (url) {
         return (
             <div
-                className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden group mb-8 shadow-md"
+                className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden group border border-gray-200/60 bg-white/70 backdrop-blur-sm"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
                 <img src={url} alt="Cover" className="w-full h-full object-cover" />
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                />
 
                 {isHovered && (
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center gap-4 transition-opacity">
                         <Button variant="secondary" onClick={handleUpload}>
                             Change Cover
                         </Button>
-                        <Button variant="destructive" size="icon" onClick={handleRemove}>
+                        <Button variant="outline" size="icon" onClick={handleRemove} className="border-white text-white hover:bg-white/20">
                             <X className="w-4 h-4" />
                         </Button>
                     </div>
@@ -40,15 +69,22 @@ const CoverImage = ({ url, onUpdate }) => {
     }
 
     return (
-        <div className="flex items-center gap-4 mb-8 group">
+        <div className="flex items-center gap-4 group">
             <Button
                 variant="outline"
                 onClick={handleUpload}
-                className="text-gray-500 hover:text-magical-violet hover:border-magical-violet/50 transition-all gap-2"
+                className="text-gray-700 hover:text-brand hover:border-brand/50 transition-all gap-2 text-base px-5 py-2.5"
             >
                 <ImageIcon className="w-4 h-4" />
                 Add Cover Image
             </Button>
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+            />
             <p className="text-sm text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
                 Use a high-quality image for better engagement
             </p>

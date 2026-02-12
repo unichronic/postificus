@@ -3,13 +3,13 @@ import { X, Hash } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
-const TagInput = ({ tags, setTags }) => {
+const TagInput = ({ tags, setTags, maxTags = 4, placeholder }) => {
     const [input, setInput] = useState('');
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' && input.trim()) {
             e.preventDefault();
-            if (!tags.includes(input.trim()) && tags.length < 4) {
+            if (!tags.includes(input.trim()) && tags.length < maxTags) {
                 setTags([...tags, input.trim()]);
                 setInput('');
             }
@@ -28,27 +28,28 @@ const TagInput = ({ tags, setTags }) => {
                 <Badge
                     key={tag}
                     variant="secondary"
-                    className="pl-2 pr-1 py-1 bg-magical-violet/10 text-magical-violet hover:bg-magical-violet/20 border-none gap-1"
+                    className="pl-3 pr-2 py-1.5 bg-white/70 text-gray-700 border border-gray-200/50 gap-1 text-base"
                 >
-                    <Hash className="w-3 h-3 opacity-50" />
+                    <Hash className="w-4 h-4 opacity-50" />
                     {tag}
                     <button
+                        type="button"
                         onClick={() => removeTag(tag)}
-                        className="ml-1 hover:bg-magical-violet/20 rounded-full p-0.5 transition-colors"
+                        className="ml-1 hover:bg-gray-200 rounded-full p-0.5 transition-colors"
                     >
-                        <X className="w-3 h-3" />
+                        <X className="w-4 h-4" />
                     </button>
                 </Badge>
             ))}
 
-            {tags.length < 4 && (
+            {tags.length < maxTags && (
                 <Input
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder={tags.length === 0 ? "Add up to 4 tags..." : "Add another..."}
-                    className="w-40 border-none shadow-none focus-visible:ring-0 px-0 placeholder:text-gray-400 h-8"
+                    placeholder={tags.length === 0 ? (placeholder || `Add up to ${maxTags} tags...`) : "Add another..."}
+                    className="w-48 border-none shadow-none focus-visible:ring-0 px-0 placeholder:text-gray-400 h-9 text-base"
                 />
             )}
         </div>

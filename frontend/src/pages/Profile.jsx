@@ -1,78 +1,132 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MapPin, Link as LinkIcon, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Profile = () => {
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    const [profile, setProfile] = useState({
+        fullName: '',
+        username: '',
+        headline: '',
+        bio: '',
+        location: '',
+        website: '',
+        publicEmail: '',
+        skills: [],
+    });
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const response = await fetch(`${apiBase}/api/profile`);
+                if (!response.ok) {
+                    throw new Error('Failed to load profile');
+                }
+                const data = await response.json();
+                setProfile({
+                    fullName: data.full_name || '',
+                    username: data.username || '',
+                    headline: data.headline || '',
+                    bio: data.bio || '',
+                    location: data.location || '',
+                    website: data.website || '',
+                    publicEmail: data.public_email || '',
+                    skills: Array.isArray(data.skills) ? data.skills : [],
+                });
+            } catch (e) {
+                // Keep defaults on failure
+            }
+        };
+
+        loadProfile();
+    }, [apiBase]);
+
     return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Profile Header */}
-            <div className="relative mb-20">
-                <div className="h-48 bg-gradient-to-r from-magical-sky via-magical-violet to-magical-fuchsia rounded-2xl shadow-md"></div>
-                <div className="absolute -bottom-16 left-8 flex items-end gap-6">
-                    <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-white overflow-hidden">
-                        <img src="https://github.com/shadcn.png" alt="Profile" className="w-full h-full object-cover" />
+        <div className="max-w-7xl mx-auto space-y-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-gray-200 pb-10">
+                <div className="flex items-center gap-4">
+                    <div className="w-28 h-28 rounded-full border border-gray-200 bg-white overflow-hidden">
+                        <img src="https://github.com/shadcn.png" alt="Profile" loading="lazy" className="w-full h-full object-cover" />
                     </div>
-                    <div className="mb-2">
-                        <h1 className="text-3xl font-bold text-gray-800">Jane Doe</h1>
-                        <p className="text-gray-500">Senior UI/UX Designer</p>
+                    <div>
+                        <h1 className="text-5xl font-semibold text-gray-900 font-heading">
+                            {profile.fullName || 'Your Name'}
+                        </h1>
+                        <p className="text-gray-500 text-lg leading-relaxed">
+                            {profile.headline || 'Your headline'}
+                        </p>
                     </div>
                 </div>
-                <div className="absolute -bottom-12 right-8">
-                    <Button className="bg-magical-violet hover:bg-magical-fuchsia text-white rounded-full shadow-md transition-all hover:scale-105">
+                <Link to="/settings">
+                    <Button className="bg-brand hover:bg-brand-dark text-white rounded-full px-7 py-3 text-base">
                         Edit Profile
                     </Button>
-                </div>
+                </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
-                {/* Left Column */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                 <div className="space-y-6">
-                    <Card className="border-none shadow-md bg-white/50 backdrop-blur-sm">
-                        <CardContent className="pt-6 space-y-4">
-                            <div className="flex items-center gap-3 text-gray-600">
-                                <MapPin className="w-5 h-5 text-magical-violet" />
-                                <span>San Francisco, CA</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-gray-600">
-                                <LinkIcon className="w-5 h-5 text-magical-violet" />
-                                <a href="#" className="hover:text-magical-fuchsia transition-colors">janedoe.design</a>
-                            </div>
-                            <div className="flex items-center gap-3 text-gray-600">
-                                <Calendar className="w-5 h-5 text-magical-violet" />
+                    <Card className="border-gray-200/60 shadow-none bg-white/70">
+                        <CardContent className="pt-6 space-y-5 text-lg text-gray-700">
+                            {profile.location && (
+                                <div className="flex items-center gap-3">
+                                    <MapPin className="w-5 h-5 text-brand" />
+                                    <span>{profile.location}</span>
+                                </div>
+                            )}
+                            {profile.website && (
+                                <div className="flex items-center gap-3">
+                                    <LinkIcon className="w-5 h-5 text-brand" />
+                                    <a href={profile.website} className="hover:text-brand transition-colors" target="_blank" rel="noreferrer">
+                                        {profile.website}
+                                    </a>
+                                </div>
+                            )}
+                            {profile.publicEmail && (
+                                <div className="flex items-center gap-3">
+                                    <LinkIcon className="w-5 h-5 text-brand" />
+                                    <a href={`mailto:${profile.publicEmail}`} className="hover:text-brand transition-colors">
+                                        {profile.publicEmail}
+                                    </a>
+                                </div>
+                            )}
+                            <div className="flex items-center gap-3">
+                                <Calendar className="w-5 h-5 text-brand" />
                                 <span>Joined October 2023</span>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Right Column */}
                 <div className="md:col-span-2 space-y-6">
-                    <Card className="border-none shadow-md bg-white/50 backdrop-blur-sm">
+                    <Card className="border-gray-200/60 shadow-none bg-white/70">
                         <CardHeader>
-                            <CardTitle>About</CardTitle>
+                            <CardTitle className="text-3xl font-semibold text-gray-900 font-heading">About</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-gray-600 leading-relaxed">
-                                Passionate about creating beautiful and functional user experiences.
-                                With 7 years of experience in the field, I love blending aesthetics with usability.
-                                Currently working on the next generation of content creation tools.
+                            <p className="text-gray-600 leading-relaxed text-lg">
+                                {profile.bio || 'Add a short bio in Settings to introduce yourself.'}
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-none shadow-md bg-white/50 backdrop-blur-sm">
+                    <Card className="border-gray-200/60 shadow-none bg-white/70">
                         <CardHeader>
-                            <CardTitle>Skills</CardTitle>
+                            <CardTitle className="text-3xl font-semibold text-gray-900 font-heading">Skills</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex flex-wrap gap-2">
-                                {['UI Design', 'UX Research', 'React', 'Tailwind CSS', 'Figma', 'Prototyping'].map((skill) => (
-                                    <span key={skill} className="px-3 py-1 bg-magical-violet/10 text-magical-violet rounded-full text-sm font-medium">
-                                        {skill}
-                                    </span>
-                                ))}
+                                {(profile.skills && profile.skills.length > 0) ? (
+                                    profile.skills.map((skill) => (
+                                        <span key={skill} className="px-5 py-2 rounded-full border border-gray-200 text-lg text-gray-700 bg-gray-50">
+                                            {skill}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-gray-500 text-base">Add skills in Settings to show them here.</span>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
