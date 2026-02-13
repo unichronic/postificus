@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"postificus/internal/rabbitmq"
 	"postificus/internal/service"
@@ -50,6 +53,21 @@ func (c *PublishController) PublishPost(ctx echo.Context) error {
 	// Publish to RabbitMQ
 	if err := c.producer.Publish(service.TypePublishPost, bytes); err != nil {
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to enqueue task"})
+	}
+
+	// WAKE-ON-DEMAND (Fire & Forget)
+	// This ensures the Free Tier Worker wakes up if it was sleeping.
+	if workerURL := os.Getenv("WORKER_URL"); workerURL != "" {
+		go func(url string) {
+			client := http.Client{Timeout: 5 * time.Second}
+			resp, err := client.Get(url)
+			if err != nil {
+				log.Printf("⚠️ Failed to wake worker: %v", err)
+				return
+			}
+			defer resp.Body.Close()
+			log.Printf("🔔 Poked worker at %s (Status: %s)", url, resp.Status)
+		}(workerURL)
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]interface{}{

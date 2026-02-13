@@ -7,7 +7,7 @@ services:
     env: docker
     dockerContext: .
     dockerfilePath: ./Dockerfile
-    plan: starter
+    plan: free
     numInstances: 1
     dockerCommand: ./postificus-api # Override CMD
     envVars:
@@ -15,6 +15,8 @@ services:
         value: production
       - key: PORT
         value: 8080
+      - key: WORKER_URL
+        sync: false # Used to wake up the worker (e.g. https://postificus-worker.onrender.com)
       # External Services (User must provide connections)
       - key: DATABASE_URL
         sync: false # Supabase (postgres://...)
@@ -36,14 +38,14 @@ services:
 
 
   # --------------------------------------------------------------------------------
-  # 2. Worker Service (Background)
+  # 2. Worker Service (Running as Web Service for Free Tier)
   # --------------------------------------------------------------------------------
-  - type: worker
+  - type: web
     name: postificus-worker
     env: docker
     dockerContext: .
     dockerfilePath: ./Dockerfile
-    plan: starter
+    plan: free
     numInstances: 1
     dockerCommand: ./postificus-worker
     envVars:

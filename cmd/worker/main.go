@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -85,7 +86,27 @@ func main() {
 		}
 	}()
 
-	// 6. Block until interrupt
+	// 6. Start Health Check Server (Required for Render Web Service)
+	go func() {
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
+		// Register a simple health check handler
+		// We use a new ServeMux to avoid polluting the default mux if used elsewhere (though unlikely here)
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Worker is running"))
+		})
+
+		log.Printf("Starting health check server on port %s", port)
+		if err := http.ListenAndServe(":"+port, mux); err != nil {
+			log.Printf("Health check server failed: %v", err)
+		}
+	}()
+
+	// 7. Block until interrupt
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
