@@ -22,7 +22,7 @@ func (c *AuthController) HandleConnectPlatform(ctx echo.Context) error {
 	// Parse request
 	var req struct {
 		Platform string `json:"platform"`
-		UserID   int    `json:"user_id"`
+		UserID   string `json:"user_id"`
 	}
 	if err := ctx.Bind(&req); err != nil {
 		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
@@ -34,8 +34,8 @@ func (c *AuthController) HandleConnectPlatform(ctx echo.Context) error {
 	}
 
 	// Default User ID (MVP)
-	if req.UserID == 0 {
-		req.UserID = 1
+	if req.UserID == "" {
+		req.UserID = service.DefaultUserID()
 	}
 
 	// Call Service

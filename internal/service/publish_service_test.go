@@ -19,12 +19,12 @@ type MockCredentialsRepository struct {
 	mock.Mock
 }
 
-func (m *MockCredentialsRepository) SaveCredentials(ctx context.Context, userID int, platform string, credentials map[string]string) error {
+func (m *MockCredentialsRepository) SaveCredentials(ctx context.Context, userID string, platform string, credentials map[string]string) error {
 	args := m.Called(ctx, userID, platform, credentials)
 	return args.Error(0)
 }
 
-func (m *MockCredentialsRepository) GetCredentials(ctx context.Context, userID int, platform string) (*domain.UserCredential, error) {
+func (m *MockCredentialsRepository) GetCredentials(ctx context.Context, userID string, platform string) (*domain.UserCredential, error) {
 	args := m.Called(ctx, userID, platform)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -32,7 +32,7 @@ func (m *MockCredentialsRepository) GetCredentials(ctx context.Context, userID i
 	return args.Get(0).(*domain.UserCredential), args.Error(1)
 }
 
-func (m *MockCredentialsRepository) GetAllCredentials(ctx context.Context, userID int) ([]domain.UserCredential, error) {
+func (m *MockCredentialsRepository) GetAllCredentials(ctx context.Context, userID string) ([]domain.UserCredential, error) {
 	args := m.Called(ctx, userID)
 	return args.Get(0).([]domain.UserCredential), args.Error(1)
 }
@@ -55,7 +55,7 @@ func TestPublishService_HandlePublishTask_CredsError(t *testing.T) {
 	svc := NewPublishService(mockRepo)
 
 	payload := PublishPayload{
-		UserID:   1,
+		UserID:   DefaultUserID(),
 		Platform: "medium",
 		Title:    "Test Title",
 		Content:  "Content",
@@ -63,7 +63,7 @@ func TestPublishService_HandlePublishTask_CredsError(t *testing.T) {
 	payloadBytes, _ := json.Marshal(payload)
 
 	// Expectation: GetCredentials fails
-	mockRepo.On("GetCredentials", mock.Anything, 1, "medium").Return(nil, errors.New("db error"))
+	mockRepo.On("GetCredentials", mock.Anything, DefaultUserID(), "medium").Return(nil, errors.New("db error"))
 
 	// Execute
 	err := svc.HandlePublishTask(payloadBytes)
@@ -85,7 +85,7 @@ func TestPublishService_HandlePublishTask_NoCreds(t *testing.T) {
 	svc := NewPublishService(mockRepo)
 
 	payload := PublishPayload{
-		UserID:   1,
+		UserID:   DefaultUserID(),
 		Platform: "medium",
 		Title:    "Test Title",
 		Content:  "Content",
@@ -93,7 +93,7 @@ func TestPublishService_HandlePublishTask_NoCreds(t *testing.T) {
 	payloadBytes, _ := json.Marshal(payload)
 
 	// Expectation: GetCredentials returns nil
-	mockRepo.On("GetCredentials", mock.Anything, 1, "medium").Return(nil, nil)
+	mockRepo.On("GetCredentials", mock.Anything, DefaultUserID(), "medium").Return(nil, nil)
 
 	// Execute
 	err := svc.HandlePublishTask(payloadBytes)

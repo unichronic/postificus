@@ -41,6 +41,6 @@ func (s *DraftService) SaveDraft(ctx context.Context, draft *domain.Draft) error
 	return nil
 }
 
-func (s *DraftService) GetDraft(ctx context.Context, id string, userID int) (*domain.Draft, error) {
+func (s *DraftService) GetDraft(ctx context.Context, id string, userID string) (*domain.Draft, error) {
 	return s.draftRepo.GetDraft(ctx, id, userID)
 }

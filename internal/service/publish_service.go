@@ -19,7 +19,7 @@ const (
 )
 
 type PublishPayload struct {
-	UserID     int      `json:"user_id"`
+	UserID     string   `json:"user_id"`
 	Platform   string   `json:"platform"` // "medium", "linkedin", "devto"
 	Title      string   `json:"title"`
 	Content    string   `json:"content"`
@@ -144,7 +144,7 @@ func (s *PublishService) HandlePublishTask(payload []byte) error {
 }
 
 // Helper to fetch credentials from DB and unmarshal them
-func (s *PublishService) fetchCredentials(ctx context.Context, userID int, platform string) (map[string]string, error) {
+func (s *PublishService) fetchCredentials(ctx context.Context, userID string, platform string) (map[string]string, error) {
 	cred, err := s.credsRepo.GetCredentials(ctx, userID, platform)
 	if err != nil {
 		return nil, err

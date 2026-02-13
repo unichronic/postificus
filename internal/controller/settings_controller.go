@@ -37,7 +37,7 @@ func (c *SettingsController) SaveCredentials(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Platform and credentials required"})
 	}
 
-	userID := 1 // Hardcoded MVP
+	userID := service.DefaultUserID()
 
 	// Manual save bypasses provider login
 	if err := c.authService.ManualSaveCredentials(ctx.Request().Context(), userID, req.Platform, req.Credentials); err != nil {
@@ -49,7 +49,7 @@ func (c *SettingsController) SaveCredentials(ctx echo.Context) error {
 
 func (c *SettingsController) GetCredentialsStatus(ctx echo.Context) error {
 	platform := ctx.Param("platform")
-	userID := 1 // Hardcoded MVP
+	userID := service.DefaultUserID()
 
 	connected, account, err := c.authService.GetConnectionStatus(ctx.Request().Context(), userID, platform)
 	if err != nil {
@@ -66,7 +66,7 @@ func (c *SettingsController) GetCredentialsStatus(ctx echo.Context) error {
 // Profile Handling
 
 func (c *SettingsController) GetProfile(ctx echo.Context) error {
-	userID := 1
+	userID := service.DefaultUserID()
 	profile, err := c.profileService.GetProfile(ctx.Request().Context(), userID)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch profile"})
@@ -81,7 +81,7 @@ func (c *SettingsController) SaveProfile(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 	}
 
-	profile.UserID = 1 // Enforce MVP user
+	profile.UserID = service.DefaultUserID() // Enforce MVP user
 
 	if err := c.profileService.SaveProfile(ctx.Request().Context(), &profile); err != nil {
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})

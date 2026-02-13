@@ -46,6 +46,9 @@ func GetHardenedLauncher(headless bool, useFirefox bool) *launcher.Launcher {
 	} else {
 		// CHROME CONFIGURATION
 		path, _ := launcher.LookPath()
+		if bin := os.Getenv("BROWSER_BIN"); bin != "" {
+			path = bin
+		}
 		l.Bin(path)
 		l.NoSandbox(true)
 		l.Headless(headless)

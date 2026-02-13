@@ -19,7 +19,7 @@ func NewActivityController(service *service.ActivityService) *ActivityController
 }
 
 func (c *ActivityController) GetDevtoActivity(ctx echo.Context) error {
-	userID := 1 // Hardcoded MVP
+	userID := service.DefaultUserID()
 	limit := 10
 	if raw := ctx.QueryParam("limit"); raw != "" {
 		if parsed, err := strconv.Atoi(raw); err == nil && parsed > 0 {
@@ -41,7 +41,7 @@ func (c *ActivityController) GetDevtoActivity(ctx echo.Context) error {
 }
 
 func (c *ActivityController) GetMediumActivity(ctx echo.Context) error {
-	userID := 1 // Hardcoded MVP
+	userID := service.DefaultUserID()
 	limit := 10
 	if raw := ctx.QueryParam("limit"); raw != "" {
 		if parsed, err := strconv.Atoi(raw); err == nil && parsed > 0 {

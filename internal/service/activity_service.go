@@ -28,7 +28,7 @@ func NewActivityService(credsRepo storage.CredentialsRepository) *ActivityServic
 }
 
 // UpsertPost inserts or updates a post in the unified_posts table.
-func (s *ActivityService) UpsertPost(ctx context.Context, userID int, post domain.UnifiedPost) error {
+func (s *ActivityService) UpsertPost(ctx context.Context, userID string, post domain.UnifiedPost) error {
 	if storage.DB == nil {
 		return fmt.Errorf("database not initialized")
 	}
@@ -67,7 +67,7 @@ func (s *ActivityService) UpsertPost(ctx context.Context, userID int, post domai
 
 	// Invalidate Cache for this user
 	if storage.RedisClient != nil {
-		cacheKey := fmt.Sprintf("dashboard_activity:%d", userID)
+		cacheKey := fmt.Sprintf("dashboard_activity:%s", userID)
 		storage.RedisClient.Del(ctx, cacheKey)
 	}
 
@@ -75,12 +75,12 @@ func (s *ActivityService) UpsertPost(ctx context.Context, userID int, post domai
 }
 
 // GetDashboardActivity returns the unified list of posts from local cache (Redis) or DB
-func (s *ActivityService) GetDashboardActivity(ctx context.Context, userID int, limit int) ([]domain.UnifiedPost, error) {
+func (s *ActivityService) GetDashboardActivity(ctx context.Context, userID string, limit int) ([]domain.UnifiedPost, error) {
 	if storage.DB == nil {
 		return nil, fmt.Errorf("database not initialized")
 	}
 
-	cacheKey := fmt.Sprintf("dashboard_activity:%d", userID)
+	cacheKey := fmt.Sprintf("dashboard_activity:%s", userID)
 
 	// 1. Try Cache
 	if storage.RedisClient != nil {
@@ -155,7 +155,7 @@ func (s *ActivityService) GetDashboardActivity(ctx context.Context, userID int, 
 
 // Live Fetch Methods
 
-func (s *ActivityService) FetchLiveDevtoActivity(ctx context.Context, userID int, limit int) ([]automation.DevtoPost, error) {
+func (s *ActivityService) FetchLiveDevtoActivity(ctx context.Context, userID string, limit int) ([]automation.DevtoPost, error) {
 	if limit > 50 {
 		limit = 50
 	}
@@ -173,7 +173,7 @@ func (s *ActivityService) FetchLiveDevtoActivity(ctx context.Context, userID int
 	return posts, nil
 }
 
-func (s *ActivityService) FetchLiveMediumActivity(ctx context.Context, userID int, limit int) ([]automation.MediumPost, error) {
+func (s *ActivityService) FetchLiveMediumActivity(ctx context.Context, userID string, limit int) ([]automation.MediumPost, error) {
 	if limit > 50 {
 		limit = 50
 	}
@@ -192,7 +192,7 @@ func (s *ActivityService) FetchLiveMediumActivity(ctx context.Context, userID in
 
 // Helpers
 
-func (s *ActivityService) getDevtoToken(ctx context.Context, userID int) (string, error) {
+func (s *ActivityService) getDevtoToken(ctx context.Context, userID string) (string, error) {
 	creds, err := s.credsRepo.GetCredentials(ctx, userID, "devto")
 	if err != nil {
 		return "", err
@@ -214,23 +214,39 @@ func (s *ActivityService) getDevtoToken(ctx context.Context, userID int) (string
 	return "", errors.New("invalid devto credentials format")
 }
 
-func (s *ActivityService) getMediumCredentials(ctx context.Context, userID int) (string, string, string, error) {
+func (s *ActivityService) getMediumCredentials(ctx context.Context, userID string) (string, string, string, error) {
 	creds, err := s.credsRepo.GetCredentials(ctx, userID, "medium")
 	if err != nil {
-		return "", "", "", err
-	}
-	if creds == nil {
-		return "", "", "", errors.New("medium credentials missing")
+		// Log error but try fallback
+		fmt.Printf("DB Error for Medium creds: %v\n", err)
 	}
 
-	var details map[string]interface{}
-	if err := json.Unmarshal(creds.Credentials, &details); err == nil {
-		uid, _ := details["uid"].(string)
-		sid, _ := details["sid"].(string)
-		xsrf, _ := details["xsrf"].(string)
-		if uid != "" && sid != "" && xsrf != "" {
-			return uid, sid, xsrf, nil
+	var uid, sid, xsrf string
+
+	// Try DB
+	if creds != nil {
+		var details map[string]interface{}
+		if err := json.Unmarshal(creds.Credentials, &details); err == nil {
+			uid, _ = details["uid"].(string)
+			sid, _ = details["sid"].(string)
+			xsrf, _ = details["xsrf"].(string)
 		}
 	}
-	return "", "", "", errors.New("incomplete medium credentials")
+
+	// Fallback to Env if missing
+	if uid == "" {
+		uid = os.Getenv("MEDIUM_UID")
+	}
+	if sid == "" {
+		sid = os.Getenv("MEDIUM_SID")
+	}
+	if xsrf == "" {
+		xsrf = os.Getenv("MEDIUM_XSRF")
+	}
+
+	if uid != "" && sid != "" && xsrf != "" {
+		return uid, sid, xsrf, nil
+	}
+
+	return "", "", "", errors.New("medium credentials missing (DB & Env)")
 }

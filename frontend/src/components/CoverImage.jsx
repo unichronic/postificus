@@ -13,7 +13,7 @@ const CoverImage = ({ url, onUpdate }) => {
         }
     };
 
-    const handleFileChange = (event) => {
+    const handleFileChange = async (event) => {
         const file = event.target.files?.[0];
         if (!file) {
             return;
@@ -23,14 +23,30 @@ const CoverImage = ({ url, onUpdate }) => {
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = () => {
-            const result = typeof reader.result === 'string' ? reader.result : '';
-            if (result) {
-                onUpdate(result);
+        // Upload to API
+        setIsHovered(false); // Hide overlay during upload
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/upload`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Upload failed');
             }
-        };
-        reader.readAsDataURL(file);
+
+            const data = await response.json();
+            if (data.url) {
+                onUpdate(data.url);
+            }
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("Failed to upload image.");
+        }
     };
 
     const handleRemove = (e) => {

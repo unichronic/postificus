@@ -21,7 +21,7 @@ func NewAuthService(credsRepo storage.CredentialsRepository) *AuthService {
 }
 
 // ConnectPlatform handles the flow of connecting a platform account
-func (s *AuthService) ConnectPlatform(ctx context.Context, userID int, platform string) (string, error) {
+func (s *AuthService) ConnectPlatform(ctx context.Context, userID string, platform string) (string, error) {
 	var creds map[string]string
 	var username string
 
@@ -66,12 +66,12 @@ func (s *AuthService) ConnectPlatform(ctx context.Context, userID int, platform 
 }
 
 // ManualSaveCredentials allows saving credentials directly (non-interactive)
-func (s *AuthService) ManualSaveCredentials(ctx context.Context, userID int, platform string, creds map[string]string) error {
+func (s *AuthService) ManualSaveCredentials(ctx context.Context, userID string, platform string, creds map[string]string) error {
 	return s.credsRepo.SaveCredentials(ctx, userID, platform, creds)
 }
 
 // GetConnectionStatus checks if a platform is connected and returns the account name
-func (s *AuthService) GetConnectionStatus(ctx context.Context, userID int, platform string) (bool, string, error) {
+func (s *AuthService) GetConnectionStatus(ctx context.Context, userID string, platform string) (bool, string, error) {
 	cred, err := s.credsRepo.GetCredentials(ctx, userID, platform)
 	if err != nil {
 		return false, "", err

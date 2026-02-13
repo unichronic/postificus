@@ -1,0 +1,15 @@
+metrics:
+  global:
+    scrape_interval: 5s
+  configs:
+    - name: postificus
+      remote_write:
+        - url: ${GRAFANA_CLOUD_PROM_URL}
+          basic_auth:
+            username: ${GRAFANA_CLOUD_PROM_USERNAME}
+            password: ${GRAFANA_CLOUD_PROM_PASSWORD}
+      scrape_configs:
+        - job_name: postificus_api
+          metrics_path: /metrics
+          static_configs:
+            - targets: ['api:8080']

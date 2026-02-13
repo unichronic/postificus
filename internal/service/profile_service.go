@@ -14,7 +14,7 @@ func NewProfileService(profileRepo storage.ProfileRepository) *ProfileService { 
 	return &ProfileService{profileRepo: profileRepo} // Changed from repo: repo
 }
 
-func (s *ProfileService) GetProfile(ctx context.Context, userID int) (*domain.Profile, error) {
+func (s *ProfileService) GetProfile(ctx context.Context, userID string) (*domain.Profile, error) {
 	return s.profileRepo.GetProfile(ctx, userID)
 }
 

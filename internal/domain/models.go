@@ -7,7 +7,7 @@ import (
 
 // UserCredential represents the stored credentials for a platform
 type UserCredential struct {
-	UserID      int             `json:"user_id"`
+	UserID      string          `json:"user_id"`
 	Platform    string          `json:"platform"`
 	Credentials json.RawMessage `json:"credentials"`
 	UpdatedAt   time.Time       `json:"updated_at"`
@@ -16,7 +16,7 @@ type UserCredential struct {
 // Draft represents a blog post draft
 type Draft struct {
 	ID             string    `json:"id"`
-	UserID         int       `json:"user_id"`
+	UserID         string    `json:"user_id"`
 	Title          string    `json:"title"`
 	Content        string    `json:"content"`
 	CoverImage     string    `json:"cover_image"`
@@ -27,7 +27,7 @@ type Draft struct {
 
 // Profile represents user profile information
 type Profile struct {
-	UserID      int      `json:"user_id"`
+	UserID      string   `json:"user_id"`
 	FullName    string   `json:"full_name"`
 	Username    string   `json:"username"`
 	Headline    string   `json:"headline"`

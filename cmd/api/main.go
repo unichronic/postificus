@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -38,20 +37,14 @@ func main() {
 	}
 	defer storage.CloseRedis()
 
+	if err := storage.InitS3(); err != nil {
+		log.Printf("Warning: Failed to init S3: %v", err)
+	}
+
 	// 2. RabbitMQ (Producer Only)
 	rabbitAddr := os.Getenv("RABBITMQ_URL")
 	if rabbitAddr == "" {
-		host := os.Getenv("RABBITMQ_HOST")
-		port := os.Getenv("RABBITMQ_PORT")
-		if host != "" {
-			if port == "" {
-				port = "5672"
-			}
-			// Default guest/guest for private service
-			rabbitAddr = fmt.Sprintf("amqp://guest:guest@%s:%s/", host, port)
-		} else {
-			rabbitAddr = "amqp://guest:guest@localhost:5672/"
-		}
+		rabbitAddr = "amqp://guest:guest@localhost:5672/"
 	}
 	// Simple retry loop
 	var rabbitConn *rabbitmq.Connection
@@ -121,6 +114,12 @@ func main() {
 	// Dashboard & Activity
 	e.GET("/api/dashboard/activity", dashboardController.GetDashboardActivity)
 	e.POST("/api/dashboard/sync", dashboardController.TriggerSync)
+
+	e.POST("/api/dashboard/sync", dashboardController.TriggerSync)
+
+	// Uploads
+	uploadController := controller.NewUploadController()
+	e.POST("/api/upload", uploadController.HandleUpload)
 
 	// Live Activity (Platform specific)
 	e.GET("/api/devto/activity", activityController.GetDevtoActivity)

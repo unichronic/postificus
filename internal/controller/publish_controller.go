@@ -33,7 +33,7 @@ func (c *PublishController) PublishPost(ctx echo.Context) error {
 
 	// Create Task Payload
 	payload := service.PublishPayload{
-		UserID:     1, // Hardcoded for MVP
+		UserID:     service.DefaultUserID(),
 		Platform:   platform,
 		Title:      req.Title,
 		Content:    req.Content,

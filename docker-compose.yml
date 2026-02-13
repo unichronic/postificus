@@ -48,7 +48,7 @@ services:
       - app_net
 
   minio:
-    image: minio/minio
+    image: minio/minio:latest
     container_name: postificus_s3
     ports:
       - "9000:9000"
@@ -71,12 +71,19 @@ services:
       - "8080:8080"
     environment:
       - DATABASE_URL=postgres://user:password@db:5432/postificus?sslmode=disable
-      - REDIS_URL=redis:6379
+      - REDIS_URL=redis://postificus_redis:6379
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - S3_ENDPOINT=minio:9000
-      - S3_ACCESS_KEY=admin
-      - S3_SECRET_KEY=password123
+      - S3_ENDPOINT=http://minio:9000
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - S3_PUBLIC_URL=http://localhost:9000
       - APP_ENV=production
+      # Auth Keys
+      - MEDIUM_UID=${MEDIUM_UID}
+      - MEDIUM_SID=${MEDIUM_SID}
+      - MEDIUM_XSRF=${MEDIUM_XSRF}
+      - DEVTO_SESSION_TOKEN=${DEVTO_SESSION_TOKEN}
+      - LI_AT=${LI_AT}
     depends_on:
       db:
         condition: service_healthy
@@ -93,14 +100,20 @@ services:
     command: ["./postificus-worker"] # Command to run Worker
     restart: always
     environment:
-      - BROWSER_HEADLESS=false
+      - BROWSER_HEADLESS=true
       - DATABASE_URL=postgres://user:password@db:5432/postificus?sslmode=disable
-      - REDIS_URL=redis:6379
+      - REDIS_URL=redis://postificus_redis:6379
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - S3_ENDPOINT=minio:9000
-      - S3_ACCESS_KEY=admin
-      - S3_SECRET_KEY=password123
+      - S3_ENDPOINT=http://minio:9000
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
       - APP_ENV=production
+      # Auth Keys
+      - MEDIUM_UID=${MEDIUM_UID}
+      - MEDIUM_SID=${MEDIUM_SID}
+      - MEDIUM_XSRF=${MEDIUM_XSRF}
+      - DEVTO_SESSION_TOKEN=${DEVTO_SESSION_TOKEN}
+      - LI_AT=${LI_AT}
     depends_on:
       db:
         condition: service_healthy
@@ -111,35 +124,20 @@ services:
     networks:
       - app_net
 
-
-  prometheus:
-    image: prom/prometheus
-    container_name: postificus_prometheus
-    ports:
-      - "9090:9090"
+  grafana-agent:
+    image: grafana/agent:latest
+    container_name: postificus_grafana_agent
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-    networks:
-      - app_net
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: postificus_grafana
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/etc/grafana/dashboards
+      - ./grafana/agent/agent.yaml:/etc/agent/agent.yaml
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
+      - GRAFANA_CLOUD_PROM_URL
+      - GRAFANA_CLOUD_PROM_USERNAME
+      - GRAFANA_CLOUD_PROM_PASSWORD
+    command:
+      - "-config.file=/etc/agent/agent.yaml"
+      - "-config.expand-env"
     depends_on:
-      - prometheus
+      - api
     networks:
       - app_net
 
@@ -150,8 +148,6 @@ volumes:
   redis_data:
   rabbitmq_data:
   minio_data:
-  prometheus_data:
-  grafana_data:
 
 networks:
   app_net:

@@ -20,7 +20,7 @@ type MockActivityRepo struct {
 	mock.Mock
 }
 
-func (m *MockActivityRepo) GetCredentials(ctx context.Context, userID int, platform string) (*domain.UserCredential, error) {
+func (m *MockActivityRepo) GetCredentials(ctx context.Context, userID string, platform string) (*domain.UserCredential, error) {
 	args := m.Called(ctx, userID, platform)
 	if args.Get(0) == nil {
 		fmt.Printf("Mock GetCredentials returning nil, error: %v\n", args.Error(1))
@@ -29,16 +29,16 @@ func (m *MockActivityRepo) GetCredentials(ctx context.Context, userID int, platf
 	return args.Get(0).(*domain.UserCredential), args.Error(1)
 }
 
-func (m *MockActivityRepo) SaveCredentials(ctx context.Context, userID int, platform string, credentials map[string]string) error {
+func (m *MockActivityRepo) SaveCredentials(ctx context.Context, userID string, platform string, credentials map[string]string) error {
 	return nil
 }
-func (m *MockActivityRepo) GetAllCredentials(ctx context.Context, userID int) ([]domain.UserCredential, error) {
+func (m *MockActivityRepo) GetAllCredentials(ctx context.Context, userID string) ([]domain.UserCredential, error) {
 	return nil, nil
 }
-func (m *MockActivityRepo) UpsertUnifiedPost(ctx context.Context, userID int, post domain.UnifiedPost) error {
+func (m *MockActivityRepo) UpsertUnifiedPost(ctx context.Context, userID string, post domain.UnifiedPost) error {
 	return nil
 }
-func (m *MockActivityRepo) GetUnifiedPosts(ctx context.Context, userID int, limit int) ([]domain.UnifiedPost, error) {
+func (m *MockActivityRepo) GetUnifiedPosts(ctx context.Context, userID string, limit int) ([]domain.UnifiedPost, error) {
 	return nil, nil
 }
 
@@ -57,10 +57,10 @@ func TestActivityController_GetMediumActivity_NoCreds(t *testing.T) {
 	// User ID assumption (middleware usually sets this, but for test we might need to modify controller or assume default)
 	// The controller reads UserID from... wait, let's check code.
 	// It extracts from middleware "user_id". We need to set it.
-	c.Set("user_id", 1)
+	c.Set("user_id", service.DefaultUserID())
 
 	// Expectation: Service calls GetCredentials
-	mockRepo.On("GetCredentials", mock.Anything, 1, "medium").Return(nil, nil) // No creds found
+	mockRepo.On("GetCredentials", mock.Anything, service.DefaultUserID(), "medium").Return(nil, nil) // No creds found
 
 	// Execute
 	err := ctrl.GetMediumActivity(c)

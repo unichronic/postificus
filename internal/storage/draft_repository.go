@@ -11,7 +11,7 @@ import (
 
 type DraftRepository interface {
 	SaveDraft(ctx context.Context, draft *domain.Draft) error
-	GetDraft(ctx context.Context, id string, userID int) (*domain.Draft, error)
+	GetDraft(ctx context.Context, id string, userID string) (*domain.Draft, error)
 	UpdateDashboardCache(ctx context.Context, draft *domain.Draft) error
 }
 
@@ -65,7 +65,7 @@ func (r *PostgresDraftRepository) UpdateDashboardCache(ctx context.Context, draf
 	return nil
 }
 
-func (r *PostgresDraftRepository) GetDraft(ctx context.Context, id string, userID int) (*domain.Draft, error) {
+func (r *PostgresDraftRepository) GetDraft(ctx context.Context, id string, userID string) (*domain.Draft, error) {
 	query := `
 		SELECT title, content, cover_image, publish_targets, last_saved_at, is_published
 		FROM drafts

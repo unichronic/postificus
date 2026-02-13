@@ -11,7 +11,7 @@ import (
 )
 
 type ProfileRepository interface {
-	GetProfile(ctx context.Context, userID int) (*domain.Profile, error)
+	GetProfile(ctx context.Context, userID string) (*domain.Profile, error)
 	SaveProfile(ctx context.Context, profile *domain.Profile) error
 }
 
@@ -21,7 +21,7 @@ func NewProfileRepository() *PostgresProfileRepository {
 	return &PostgresProfileRepository{}
 }
 
-func (r *PostgresProfileRepository) GetProfile(ctx context.Context, userID int) (*domain.Profile, error) {
+func (r *PostgresProfileRepository) GetProfile(ctx context.Context, userID string) (*domain.Profile, error) {
 	query := `
 		SELECT full_name, username, headline, bio, location, website, public_email, skills
 		FROM user_details

@@ -1,18 +1,20 @@
 -- Users and Auth
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL
 );
 
 -- Seed a default user for MVP flows (id=1)
 INSERT INTO users (id, email, password_hash)
-VALUES (1, 'demo@postificus.local', 'demo')
+VALUES ('00000000-0000-0000-0000-000000000001', 'demo@postificus.local', 'demo')
 ON CONFLICT DO NOTHING;
 
 -- User Profile Details
 CREATE TABLE IF NOT EXISTS user_details (
-    user_id INT PRIMARY KEY REFERENCES users(id),
+    user_id UUID PRIMARY KEY REFERENCES users(id),
     full_name VARCHAR(255),
     username VARCHAR(100),
     headline VARCHAR(255),
@@ -27,7 +29,7 @@ CREATE TABLE IF NOT EXISTS user_details (
 -- The "Drafts" table (Hot edits)
 CREATE TABLE IF NOT EXISTS drafts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id INT REFERENCES users(id),
+    user_id UUID REFERENCES users(id),
     title VARCHAR(255),
     content TEXT, -- Markdown
     cover_image TEXT,
@@ -56,7 +58,7 @@ CREATE TABLE IF NOT EXISTS publish_logs (
 
 -- User Credentials (Encrypted/Stored for Automation)
 CREATE TABLE IF NOT EXISTS user_credentials (
-    user_id INT REFERENCES users(id),
+    user_id UUID REFERENCES users(id),
     platform VARCHAR(50), -- 'medium', 'linkedin', 'devto'
     credentials JSONB,
     updated_at TIMESTAMP DEFAULT NOW(),
@@ -66,7 +68,7 @@ CREATE TABLE IF NOT EXISTS user_credentials (
 -- Unified Posts (Synced Activity Cache)
 CREATE TABLE IF NOT EXISTS unified_posts (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id),
+    user_id UUID REFERENCES users(id),
     platform VARCHAR(50) NOT NULL, -- 'medium', 'devto'
     remote_id VARCHAR(255) NOT NULL, -- URL or slug to identify uniqueness
     title TEXT NOT NULL,

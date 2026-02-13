@@ -15,7 +15,7 @@ const (
 )
 
 type SyncPlatformPayload struct {
-	UserID   int    `json:"user_id"`
+	UserID   string `json:"user_id"`
 	Platform string `json:"platform"`
 }
 
@@ -38,7 +38,7 @@ func (s *SyncService) HandleSyncPlatformActivity(payload []byte) error {
 		return fmt.Errorf("json.Unmarshal failed: %v", err)
 	}
 
-	log.Printf("🔄 [Worker] Starting sync for User %d - Platform: %s", p.UserID, p.Platform)
+	log.Printf("🔄 [Worker] Starting sync for User %s - Platform: %s", p.UserID, p.Platform)
 
 	var posts []domain.UnifiedPost
 	var err error

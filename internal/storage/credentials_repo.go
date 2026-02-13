@@ -12,8 +12,8 @@ import (
 
 // CredentialsRepository defines the interface for credential storage
 type CredentialsRepository interface {
-	SaveCredentials(ctx context.Context, userID int, platform string, creds map[string]string) error
-	GetCredentials(ctx context.Context, userID int, platform string) (*domain.UserCredential, error)
+	SaveCredentials(ctx context.Context, userID string, platform string, creds map[string]string) error
+	GetCredentials(ctx context.Context, userID string, platform string) (*domain.UserCredential, error)
 }
 
 // PostgresCredentialsRepository implements CredentialsRepository
@@ -26,7 +26,7 @@ func NewCredentialsRepository() *PostgresCredentialsRepository {
 }
 
 // SaveCredentials upserts user credentials into the database
-func (r *PostgresCredentialsRepository) SaveCredentials(ctx context.Context, userID int, platform string, creds map[string]string) error {
+func (r *PostgresCredentialsRepository) SaveCredentials(ctx context.Context, userID string, platform string, creds map[string]string) error {
 	credsJSON, err := json.Marshal(creds)
 	if err != nil {
 		return fmt.Errorf("failed to marshal credentials: %w", err)
@@ -47,7 +47,7 @@ func (r *PostgresCredentialsRepository) SaveCredentials(ctx context.Context, use
 	return nil
 }
 
-func (r *PostgresCredentialsRepository) GetCredentials(ctx context.Context, userID int, platform string) (*domain.UserCredential, error) {
+func (r *PostgresCredentialsRepository) GetCredentials(ctx context.Context, userID string, platform string) (*domain.UserCredential, error) {
 	var credsJSON []byte
 	var updatedAt time.Time
 

@@ -24,7 +24,7 @@ const ConnectPlatformButton = ({ platform, name, onConnected, className, isConne
                 },
                 body: JSON.stringify({
                     platform: platform,
-                    user_id: 1 // TODO: Get from auth context
+                    user_id: '00000000-0000-0000-0000-000000000001' // TODO: Get from auth context
                 })
             });
 

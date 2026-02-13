@@ -26,7 +26,7 @@ func NewDashboardController(activityService *service.ActivityService, producer *
 
 // GetDashboardActivity returns the unified list of posts from the local database.
 func (c *DashboardController) GetDashboardActivity(ctx echo.Context) error {
-	userID := 1 // Hardcoded for MVP
+	userID := service.DefaultUserID()
 
 	limit := 20
 	if raw := ctx.QueryParam("limit"); raw != "" {
@@ -48,7 +48,7 @@ func (c *DashboardController) GetDashboardActivity(ctx echo.Context) error {
 
 // TriggerSync enqueues a background task to sync activity for a specific platform (or all).
 func (c *DashboardController) TriggerSync(ctx echo.Context) error {
-	userID := 1 // Hardcoded
+	userID := service.DefaultUserID()
 
 	var req struct {
 		Platform string `json:"platform"` // "medium", "devto", or "all"

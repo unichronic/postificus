@@ -31,7 +31,7 @@ func (c *DraftController) UpdateDraft(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 	}
 
-	userID := 1 // Hardcoded for MVP
+	userID := service.DefaultUserID()
 
 	draft := &domain.Draft{
 		ID:             id,
@@ -52,7 +52,7 @@ func (c *DraftController) UpdateDraft(ctx echo.Context) error {
 
 func (c *DraftController) GetDraft(ctx echo.Context) error {
 	id := ctx.Param("id")
-	userID := 1 // Hardcoded for MVP
+	userID := service.DefaultUserID()
 
 	draft, err := c.service.GetDraft(ctx.Request().Context(), id, userID)
 	if err != nil {
