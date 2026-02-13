@@ -9,7 +9,7 @@ services:
     dockerfilePath: ./Dockerfile
     plan: starter
     numInstances: 1
-    startCommand: ./postificus-api # Override CMD
+    dockerCommand: ./postificus-api # Override CMD
     envVars:
       - key: APP_ENV
         value: production
