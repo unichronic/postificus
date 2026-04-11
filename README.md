@@ -83,7 +83,7 @@ If you prefer to run services individually for development:
 
 1.  **Start Dependencies (DB & Redis)**
     ```bash
-    docker-compose up -d db redis minio
+    docker-compose up -d db redis rabbitmq
     ```
 
 2.  **Run the Backend (API)**
@@ -109,7 +109,25 @@ The system is architected for a modern cloud stack:
 
 *   **Backend**: Deployed as a Docker container on **Render**.
     *   *Note*: Requires a custom Dockerfile to include Chromium dependencies.
-*   **Frontend**: Deployed as a static SPA on **Vercel**.
+*   **Frontend**: Deployed as a static SPA on **Vercel** (or any static host).
+*   **Database**: Supabase Postgres (Direct connection).
+*   **Auth**: Supabase Auth (JWTs validated by API).
+*   **Cache/Queue**: Redis Cloud.
+*   **Task Queue**: CloudAMQP (RabbitMQ).
+*   **Object Storage**: Supabase Storage (S3-compatible).
+*   **Monitoring**: Grafana Cloud (Agent + remote_write).
+
+### Production Environment Variables
+
+Make sure these are set in Render (or your hosting dashboard):
+
+* `DATABASE_URL` (Supabase **Direct** URL with `sslmode=require`)
+* `REDIS_URL` (Redis Cloud URL. Use `redis://` for non-TLS, `rediss://` for TLS)
+* `RABBITMQ_URL` (CloudAMQP `amqps://` URL)
+* `SUPABASE_URL`
+* `SUPABASE_STORAGE_BUCKET`
+* `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`
+* `DEFAULT_USER_ID` (use `00000000-0000-0000-0000-000000000001` until Auth is wired)
 
 
 ## 🛠️ Tech Stack
@@ -119,7 +137,6 @@ The system is architected for a modern cloud stack:
 *   **Web Framework:** Echo v4
 *   **Task Queue:** Asynq (Redis)
 *   **Browser Automation:** Go-Rod (Stealth + CDP)
-*   **Database:** PostgreSQL (pgx) & Redis
-*   **Infrastructure:** Docker, Render, Vercel
-
-
+*   **Database:** Supabase Postgres (pgx)
+*   **Auth:** Supabase Auth
+*   **Infrastructure:** Render, Redis Cloud, CloudAMQP, Supabase Storage, Grafana Cloud

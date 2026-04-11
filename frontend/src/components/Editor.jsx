@@ -31,7 +31,6 @@ const Editor = ({ draftId, isExistingDraft = false }) => {
     const [publishError, setPublishError] = useState('');
     const [isEditorEmpty, setIsEditorEmpty] = useState(true);
     const [selectedPlatforms, setSelectedPlatforms] = useState({
-        linkedin: false,
         medium: false,
         devto: false,
     });
@@ -127,7 +126,6 @@ const Editor = ({ draftId, isExistingDraft = false }) => {
                 }
                 if (Array.isArray(data.publish_targets)) {
                     setSelectedPlatforms({
-                        linkedin: data.publish_targets.includes('linkedin'),
                         medium: data.publish_targets.includes('medium'),
                         devto: data.publish_targets.includes('devto'),
                     });
@@ -170,16 +168,13 @@ const Editor = ({ draftId, isExistingDraft = false }) => {
         };
 
         const platformLabels = {
-            linkedin: 'LinkedIn',
             medium: 'Medium',
             devto: 'Dev.to',
         };
 
         const publishToPlatform = async (platformKey) => {
-            let endpoint = '/api/publish/linkedin';
-            if (platformKey === 'medium') {
-                endpoint = '/api/publish/medium';
-            } else if (platformKey === 'devto') {
+            let endpoint = '/api/publish/medium';
+            if (platformKey === 'devto') {
                 endpoint = '/api/publish/devto';
             }
 
@@ -464,7 +459,6 @@ const Editor = ({ draftId, isExistingDraft = false }) => {
 
                         <div className="mt-5 space-y-3">
                             {[
-                                { key: 'linkedin', label: 'LinkedIn' },
                                 { key: 'medium', label: 'Medium' },
                                 { key: 'devto', label: 'Dev.to' },
                             ].map((platform) => (

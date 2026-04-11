@@ -15,6 +15,8 @@ services:
         value: production
       - key: PORT
         value: 8080
+      - key: DEFAULT_USER_ID
+        value: "00000000-0000-0000-0000-000000000001"
       - key: WORKER_URL
         sync: false # Used to wake up the worker (e.g. https://postificus-worker.onrender.com)
       # External Services (User must provide connections)
@@ -53,6 +55,10 @@ services:
         value: production
       - key: BROWSER_HEADLESS
         value: "true"
+      - key: BROWSER_BIN
+        value: /usr/bin/chromium-browser
+      - key: DEFAULT_USER_ID
+        value: "00000000-0000-0000-0000-000000000001"
       # External Services
       - key: DATABASE_URL
         sync: false

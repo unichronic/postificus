@@ -62,12 +62,10 @@ const Dashboard = () => {
     const platformLabels = {
         medium: 'Medium',
         devto: 'Dev.to',
-        linkedin: 'LinkedIn',
         postificus: 'Postificus',
     };
 
     const platformClasses = {
-        LinkedIn: 'bg-brand/15 text-brand-dark border-brand/25',
         Medium: 'bg-brand/8 text-brand border-brand/20',
         'Dev.to': 'bg-brand/22 text-brand-dark border-brand/30',
         Postificus: 'bg-brand/12 text-brand border-brand/25',

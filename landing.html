@@ -1,0 +1,623 @@
+<div class="export-wrapper" style="
+    width: 1440px;
+    min-height: 812px;
+    position: relative;
+    font-family: var(--font-family-body);
+    background-color: var(--background);
+  ">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@100;200;300;400;500;600;700;800;900&family=Geist:wght@100;200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&family=IBM+Plex+Sans:wght@100;200;300;400;500;600;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Nunito:wght@200;300;400;500;600;700;800;900&family=PT+Serif:wght@400;700&family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&family=Shantell+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <html>
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Postificus</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;display=swap"
+      rel="stylesheet" />
+    <style id="global-styles">
+      :root {
+        --brand: #9400ff;
+        --brand-dark: #6f00c2;
+        --brand-light: #e6d1ff;
+        --bg-page: #f5f5f3;
+        --bg-glass: rgba(255, 255, 255, 0.8);
+        --text-main: #111111;
+        --text-muted: #6b7280;
+        --border-subtle: rgba(229, 231, 235, 0.6);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      .export-wrapper {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-page);
+        color: var(--text-main);
+        line-height: 1.6;
+        background-image:
+          radial-gradient(circle at 15% 50%,
+            rgba(148, 0, 255, 0.08) 0%,
+            transparent 25%),
+          radial-gradient(circle at 85% 30%,
+            rgba(148, 0, 255, 0.05) 0%,
+            transparent 30%),
+          radial-gradient(#e5e7eb 1px, transparent 1px);
+        background-size:
+          100% 100%,
+          100% 100%,
+          32px 32px;
+        overflow-x: hidden;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Instrument Serif", serif;
+        font-weight: 400;
+        margin: 0;
+        color: var(--text-main);
+      }
+
+      p {
+        margin: 0;
+        color: var(--text-muted);
+      }
+
+      .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 32px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 28px;
+        border-radius: 9999px;
+        font-size: 15px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background-color: var(--brand);
+        color: white;
+        border: 1px solid transparent;
+        box-shadow: 0 4px 12px rgba(148, 0, 255, 0.25);
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        border: 1px solid #e5e7eb;
+        color: var(--text-main);
+      }
+
+      .btn-ghost {
+        background-color: transparent;
+        color: var(--text-muted);
+        padding: 8px 16px;
+      }
+
+      .glass-panel {
+        background: var(--bg-glass);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-subtle);
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.02),
+          0 2px 4px -1px rgba(0, 0, 0, 0.02);
+      }
+
+      .micro-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.25em;
+        font-weight: 600;
+        color: var(--brand);
+        margin-bottom: 16px;
+        display: block;
+      }
+    </style>
+    <style id="nav-styles">
+      .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 80px;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(16px);
+      }
+
+      .nav-inner {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .brand-logo {
+        font-family: "Instrument Serif", serif;
+        font-size: 24px;
+        font-style: italic;
+        color: var(--text-main);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .brand-mark {
+        width: 12px;
+        height: 12px;
+        background: var(--brand);
+        border-radius: 50%;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 32px;
+      }
+
+      .nav-link {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .nav-actions {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+    </style>
+    <style id="hero-styles">
+      .hero-section {
+        padding-top: 140px;
+        padding-bottom: 40px;
+        text-align: center;
+        position: relative;
+      }
+
+      .hero-content {
+        max-width: 880px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .hero-title {
+        font-size: 64px;
+        line-height: 1.1;
+        margin-bottom: 24px;
+        letter-spacing: -0.02em;
+      }
+
+      .hero-title em {
+        font-style: italic;
+        color: var(--brand);
+      }
+
+      .hero-subtitle {
+        font-size: 20px;
+        line-height: 1.6;
+        margin-bottom: 32px;
+        max-width: 580px;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 40px;
+      }
+    </style>
+    <style id="features-styles">
+      .features-section {
+        padding: 120px 0;
+      }
+
+      .section-header {
+        text-align: center;
+        margin-bottom: 80px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .section-title {
+        font-size: 40px;
+        margin-bottom: 16px;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+      }
+
+      .feature-card {
+        padding: 40px;
+        border-radius: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        transition: transform 0.2s;
+      }
+
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        background: #fdfaff;
+        border: 1px solid #f3e8ff;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--brand);
+      }
+
+      .feature-title {
+        font-size: 24px;
+        font-family: "Instrument Serif", serif;
+        margin-bottom: 8px;
+      }
+
+      .feature-desc {
+        font-size: 16px;
+        line-height: 1.6;
+      }
+    </style>
+    <style id="showcase-styles">
+      .showcase-section {
+        padding: 120px 0;
+        background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.5) 100%);
+      }
+
+      .showcase-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 80px;
+        align-items: center;
+      }
+
+      .showcase-content {
+        max-width: 480px;
+      }
+
+      .showcase-image {
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.06);
+        position: relative;
+      }
+
+      .showcase-image img {
+        width: 100%;
+        display: block;
+      }
+
+      .quote-block {
+        margin-top: 40px;
+        padding-left: 24px;
+        border-left: 2px solid var(--brand-light);
+      }
+
+      .quote-text {
+        font-family: "Instrument Serif", serif;
+        font-size: 22px;
+        font-style: italic;
+        color: var(--text-main);
+        margin-bottom: 12px;
+      }
+
+      .quote-author {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-muted);
+      }
+    </style>
+    <style id="cta-styles">
+      .cta-section {
+        padding: 160px 0;
+        text-align: center;
+      }
+
+      .cta-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 32px;
+        padding: 80px 40px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.03);
+      }
+
+      .cta-bg-glow {
+        position: absolute;
+        top: -50%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle,
+            rgba(148, 0, 255, 0.1) 0%,
+            transparent 70%);
+        pointer-events: none;
+      }
+
+      .cta-title {
+        font-size: 48px;
+        margin-bottom: 24px;
+        position: relative;
+      }
+
+      .cta-desc {
+        font-size: 18px;
+        margin-bottom: 40px;
+        max-width: 460px;
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+      }
+    </style>
+    <style id="footer-styles">
+      .footer {
+        padding: 80px 0 40px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr 1fr;
+        gap: 40px;
+        margin-bottom: 60px;
+      }
+
+      .footer-brand h3 {
+        font-size: 24px;
+        margin-bottom: 16px;
+      }
+
+      .footer-col h4 {
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 24px;
+        color: var(--text-main);
+      }
+
+      .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .footer-links a {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .footer-links a:hover {
+        color: var(--brand);
+      }
+
+      .footer-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 40px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <div class="container nav-inner">
+        <a href="#" class="brand-logo" data-media-type="banani-button">
+          <div class="brand-mark"></div>
+          Postificus
+        </a>
+        <div class="nav-links">
+          <a href="#" class="nav-link" data-media-type="banani-button">Features</a>
+          <a href="#" class="nav-link" data-media-type="banani-button">Manifesto</a>
+          <a href="#" class="nav-link" data-media-type="banani-button">Pricing</a>
+          <a href="#" class="nav-link" data-media-type="banani-button">Changelog</a>
+        </div>
+        <div class="nav-actions">
+          <a href="#" class="btn btn-ghost" data-media-type="banani-button">Sign in</a>
+          <a href="#" class="btn btn-primary" data-media-type="banani-button">Get Started</a>
+        </div>
+      </div>
+    </nav>
+
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-content">
+          <span class="micro-label">The Editorial OS</span>
+          <h1 class="hero-title">
+            Shape your thoughts.<br /><em>Publish with purpose.</em>
+          </h1>
+          <p class="hero-subtitle">
+            A calm, distraction-free environment for serious writers. Draft,
+            refine, and publish your best work without the noise.
+          </p>
+          <div class="hero-actions">
+            <a href="#" class="btn btn-primary" data-media-type="banani-button">Start Writing for Free</a>
+            <a href="#" class="btn btn-outline" data-media-type="banani-button">Read the Manifesto</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features-section" style="padding-top: 40px">
+      <div class="container">
+        <div class="section-header">
+          <span class="micro-label">Integrations</span>
+          <h2 class="section-title">Publish everywhere</h2>
+          <p>
+            One source of truth. Syndicate to your favorite platforms
+            instantly.
+          </p>
+        </div>
+        <div style="
+              display: flex;
+              justify-content: center;
+              gap: 64px;
+              opacity: 0.6;
+              filter: grayscale(100%);
+            ">
+          <!-- Simple text representations or generic icons for platforms -->
+          <div style="
+                font-size: 20px;
+                font-weight: 600;
+                font-family: &quot;Instrument Serif&quot;;
+              ">
+            Medium
+          </div>
+          <div style="
+                font-size: 20px;
+                font-weight: 600;
+                font-family: &quot;Instrument Serif&quot;;
+              ">
+            Ghost
+          </div>
+          <div style="
+                font-size: 20px;
+                font-weight: 600;
+                font-family: &quot;Instrument Serif&quot;;
+              ">
+            WordPress
+          </div>
+          <div style="
+                font-size: 20px;
+                font-weight: 600;
+                font-family: &quot;Instrument Serif&quot;;
+              ">
+            Substack
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <h3>Postificus</h3>
+            <p style="font-size: 14px; max-width: 240px">
+              Crafted for clarity. Built for the modern editorial team.
+            </p>
+          </div>
+          <div class="footer-col">
+            <h4>Product</h4>
+            <ul class="footer-links">
+              <li>
+                <a href="#" data-media-type="banani-button">Features</a>
+              </li>
+              <li><a href="#" data-media-type="banani-button">Pricing</a></li>
+              <li>
+                <a href="#" data-media-type="banani-button">Changelog</a>
+              </li>
+              <li><a href="#" data-media-type="banani-button">Docs</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Company</h4>
+            <ul class="footer-links">
+              <li>
+                <a href="#" data-media-type="banani-button">Manifesto</a>
+              </li>
+              <li><a href="#" data-media-type="banani-button">Careers</a></li>
+              <li><a href="#" data-media-type="banani-button">Blog</a></li>
+              <li><a href="#" data-media-type="banani-button">Contact</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Legal</h4>
+            <ul class="footer-links">
+              <li><a href="#" data-media-type="banani-button">Privacy</a></li>
+              <li><a href="#" data-media-type="banani-button">Terms</a></li>
+              <li>
+                <a href="#" data-media-type="banani-button">Security</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© 2024 Postificus Inc. All rights reserved.</span>
+          <div style="display: flex; gap: 24px">
+            <iconify-icon icon="lucide:twitter" style="font-size: 18px"></iconify-icon>
+            <iconify-icon icon="lucide:github" style="font-size: 18px"></iconify-icon>
+            <iconify-icon icon="lucide:linkedin" style="font-size: 18px"></iconify-icon>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+
+  </html>
+  <script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+  <style>
+    :root {
+      --background: #f5f5f3;
+      --foreground: #111111;
+      --border: #e5e7eb;
+      --input: #ffffff;
+      --primary: #9400ff;
+      --primary-foreground: #ffffff;
+      --secondary: #f5f5f5;
+      --secondary-foreground: #6b7280;
+      --muted: #f3f4f6;
+      --muted-foreground: #6b7280;
+      --success: #16a34a;
+      --success-foreground: #ffffff;
+      --accent: #e6d1ff;
+      --accent-foreground: #6f00c2;
+      --destructive: #dc2626;
+      --destructive-foreground: #ffffff;
+      --warning: #f59e0b;
+      --warning-foreground: #111111;
+      --card: rgba(255, 255, 255, 0.82);
+      --card-foreground: #111111;
+      --sidebar: #ffffff;
+      --sidebar-foreground: #111111;
+      --sidebar-primary: rgba(148, 0, 255, 0.08);
+      --sidebar-primary-foreground: #6f00c2;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      --font-family-body: Inter;
+    }
+  </style>
+</div>

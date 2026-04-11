@@ -1,0 +1,312 @@
+{
+  "project_name": "Postificus",
+  "tagline": "Centralized Content Distribution Engine",
+  "description": "A high-performance, event-driven content distribution platform that allows authors to write content once and orchestrate its distribution across multiple blogging platforms (Medium, Dev.to, LinkedIn) while maintaining SEO authority via canonical URLs.",
+  
+  "architecture": {
+    "type": "Multi-Service Event-Driven Architecture",
+    "pattern": "API + Worker Queue Pattern",
+    "philosophy": "Multi-Stage Resilience Pipeline with hierarchical fallback strategy"
+  },
+
+  "tech_stack": {
+    "backend": {
+      "language": "Go 1.24",
+      "framework": "Echo v4",
+      "database": "PostgreSQL (pgx driver)",
+      "cache_queue": "Redis",
+      "task_queue": "Asynq (Redis-based)",
+      "browser_automation": "Go-Rod with Stealth plugin",
+      "llm_integration": "Google Generative AI (Gemini)"
+    },
+    "frontend": {
+      "framework": "React 19.2",
+      "build_tool": "Vite",
+      "styling": "TailwindCSS",
+      "editor": "Tiptap (Notion-like rich text editor)",
+      "ui_components": "Radix UI",
+      "routing": "React Router v7"
+    },
+    "infrastructure": {
+      "containerization": "Docker & Docker Compose",
+      "orchestration": "Multi-container setup (API, Worker, DB, Redis, MinIO)",
+      "object_storage": "MinIO (S3-compatible)",
+      "deployment_targets": ["Render (Backend)", "Vercel (Frontend)"]
+    }
+  },
+
+  "services": {
+    "api_service": {
+      "path": "cmd/api/main.go",
+      "port": 8080,
+      "responsibilities": [
+        "REST endpoint handling",
+        "User authentication",
+        "Job enqueuing to Redis queue",
+        "Draft auto-save management",
+        "Settings & credentials management"
+      ],
+      "features": [
+        "Rate limiting (20 req/sec, burst 50)",
+        "CORS enabled",
+        "Graceful shutdown",
+        "Health check endpoint"
+      ]
+    },
+    "worker_service": {
+      "path": "cmd/worker/main.go",
+      "responsibilities": [
+        "Consuming jobs from Redis queue",
+        "Heavy automation tasks (browser automation)",
+        "Publishing content to platforms",
+        "Background processing"
+      ],
+      "configuration": {
+        "concurrency": 5,
+        "priority_queues": {
+          "critical": 6,
+          "default": 3,
+          "low": 1
+        },
+        "resource_limits": {
+          "cpu": "1.0",
+          "memory": "1G"
+        }
+      }
+    }
+  },
+
+  "automation_strategy": {
+    "hierarchical_fallback": [
+      {
+        "priority": 1,
+        "method": "Direct API",
+        "platforms": ["Dev.to"],
+        "description": "Uses official REST APIs for fastest and most reliable posting"
+      },
+      {
+        "priority": 2,
+        "method": "Stealth Browser Automation",
+        "platforms": ["Medium", "LinkedIn", "Dev.to (fallback)"],
+        "description": "Headless browser with stealth mode to bypass bot detection, used for platforms without write APIs"
+      }
+    ],
+    "stealth_features": [
+      "Strips navigator.webdriver flags",
+      "Passes as human user on SPAs",
+      "Auto-detects production env for headless mode",
+      "Visible UI for local debugging"
+    ]
+  },
+
+  "publishing_platforms": {
+    "devto": {
+      "implementation": "automation/devto.go & internal/automation/devto.go",
+      "methods": ["Browser automation with cookies"],
+      "authentication": "DEVTO_SESSION_TOKEN cookie"
+    },
+    "medium": {
+      "implementation": "automation/medium.go & internal/automation/medium.go",
+      "methods": ["Browser automation"],
+      "authentication": "MEDIUM_UID, MEDIUM_SID, MEDIUM_XSRF cookies"
+    },
+    "linkedin": {
+      "implementation": "automation/linkedin.go & internal/automation/linkedin.go",
+      "methods": ["Browser automation + LLM content generation"],
+      "authentication": "LI_AT cookie",
+      "special_feature": "Uses Gemini AI to generate social media-optimized content from blog posts"
+    }
+  },
+
+  "database_schema": {
+    "users": {
+      "purpose": "User authentication and management",
+      "fields": ["id", "email", "password_hash"]
+    },
+    "drafts": {
+      "purpose": "Hot edits and content storage",
+      "fields": ["id (UUID)", "user_id", "title", "content (Markdown)", "last_saved_at", "is_published"]
+    },
+    "publish_logs": {
+      "purpose": "Audit trail for publications",
+      "fields": ["id", "draft_id", "platform", "status", "external_url", "error_message", "created_at"],
+      "statuses": ["queued", "processing", "success", "failed"]
+    },
+    "user_credentials": {
+      "purpose": "Encrypted/stored credentials for automation",
+      "fields": ["user_id", "platform", "credentials (JSONB)", "updated_at"]
+    }
+  },
+
+  "frontend_structure": {
+    "pages": [
+      {
+        "name": "Dashboard",
+        "file": "frontend/src/pages/Dashboard.jsx",
+        "description": "Main landing page with overview"
+      },
+      {
+        "name": "Editor",
+        "file": "frontend/src/pages/EditorPage.jsx",
+        "description": "Rich text editing interface with Tiptap"
+      },
+      {
+        "name": "Settings",
+        "file": "frontend/src/pages/Settings.jsx",
+        "description": "Platform credential management and configuration"
+      },
+      {
+        "name": "Profile",
+        "file": "frontend/src/pages/Profile.jsx",
+        "description": "User profile management"
+      }
+    ],
+    "key_components": [
+      "Editor.jsx - Tiptap-powered rich text editor",
+      "TagInput.jsx - Tag management for posts",
+      "CoverImage.jsx - Cover image upload/management",
+      "Navbar.jsx - Main navigation"
+    ]
+  },
+
+  "api_endpoints": {
+    "health": {
+      "method": "GET",
+      "path": "/health",
+      "description": "Health check endpoint"
+    },
+    "drafts": {
+      "method": "PUT",
+      "path": "/api/drafts/:id",
+      "description": "Auto-save draft updates"
+    },
+    "credentials": {
+      "save": {
+        "method": "POST",
+        "path": "/api/settings/credentials",
+        "description": "Save platform credentials"
+      },
+      "status": {
+        "method": "GET",
+        "path": "/api/settings/credentials/:platform",
+        "description": "Check credential connection status"
+      }
+    },
+    "publish": {
+      "method": "POST",
+      "path": "/publish/:platform",
+      "description": "Enqueue publish task for specified platform",
+      "supported_platforms": ["devto", "medium", "linkedin"],
+      "returns": {
+        "status": "queued",
+        "task_id": "UUID"
+      }
+    }
+  },
+
+  "key_features": {
+    "core_backend": [
+      "Event-driven architecture with decoupled layers",
+      "SEO guardrails with automatic rel=canonical management",
+      "Concurrency control with rate-limited worker pools",
+      "Graceful degradation with fallback strategies"
+    ],
+    "browser_automation": [
+      "Stealth mode to avoid bot detection",
+      "Headless production mode",
+      "Shared browser instance for efficiency",
+      "Cookie-based authentication"
+    ],
+    "content_management": [
+      "Auto-save drafts",
+      "Rich text editing with Tiptap",
+      "Tag management",
+      "Cover image support",
+      "Real-time publication status polling"
+    ],
+    "ai_integration": [
+      "LLM-powered social content generation",
+      "Gemini API integration for LinkedIn post optimization"
+    ]
+  },
+
+  "deployment": {
+    "local_development": {
+      "docker_compose": "Runs full stack (DB, Redis, MinIO, API, Worker)",
+      "individual_services": "Can run services separately for development",
+      "commands": {
+        "full_stack": "docker-compose up --build",
+        "dependencies_only": "docker-compose up -d db redis minio",
+        "api": "go run cmd/api/main.go",
+        "worker": "go run cmd/worker/main.go",
+        "frontend": "cd frontend && npm run dev"
+      }
+    },
+    "production": {
+      "backend": "Docker container on Render (requires custom Dockerfile with Chromium)",
+      "frontend": "Static SPA on Vercel",
+      "databases": "Hosted PostgreSQL and Redis instances"
+    }
+  },
+
+  "directory_structure": {
+    "automation/": "Platform-specific automation modules (legacy/simple version)",
+    "internal/automation/": "Improved automation modules for worker service",
+    "internal/database/": "Database connection and schema management",
+    "internal/handlers/": "HTTP request handlers for API",
+    "internal/queue/": "Asynq task queue handlers and payloads",
+    "internal/middleware/": "Custom middleware (rate limiting, etc.)",
+    "internal/auth/": "Authentication logic",
+    "internal/llm/": "LLM integration for content generation",
+    "cmd/api/": "API service entry point",
+    "cmd/worker/": "Worker service entry point",
+    "frontend/": "React frontend application",
+    "bin/": "Compiled binaries",
+    "chrome_data/": "Browser profile data for automation"
+  },
+
+  "configuration": {
+    "environment_variables": {
+      "database": "DATABASE_URL",
+      "redis": "REDIS_URL",
+      "storage": ["S3_ENDPOINT", "S3_ACCESS_KEY", "S3_SECRET_KEY"],
+      "platform_credentials": [
+        "DEVTO_SESSION_TOKEN",
+        "MEDIUM_UID",
+        "MEDIUM_SID",
+        "MEDIUM_XSRF",
+        "LI_AT"
+      ],
+      "llm": "GEMINI_API_KEY",
+      "app": ["PORT", "APP_ENV"]
+    }
+  },
+
+  "development_status": "Active Development",
+  
+  "unique_selling_points": [
+    "Write once, publish everywhere philosophy",
+    "Unstoppable delivery system with hierarchical fallback",
+    "SEO-first approach with canonical URL enforcement",
+    "Browser automation that bypasses bot detection",
+    "AI-powered content adaptation for social platforms",
+    "Scalable worker architecture prevents blocking",
+    "Production-ready containerization"
+  ],
+
+  "challenges_solved": [
+    "Platform API unavailability (LinkedIn personal profiles)",
+    "Bot detection on modern SPAs",
+    "Memory management for browser automation at scale",
+    "SEO authority dilution across platforms",
+    "API rate limiting and concurrency control"
+  ],
+
+  "future_extensibility": [
+    "Priority queue system for different content types",
+    "Modular platform adapters for easy addition of new platforms",
+    "Scheduled posting capabilities via Asynq",
+    "Analytics scraping for cross-platform insights",
+    "Multi-user support with credential isolation"
+  ]
+}

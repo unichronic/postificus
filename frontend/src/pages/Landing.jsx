@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-const integrations = ['Medium', 'Dev.to', 'LinkedIn', 'Postificus'];
+const integrations = ['Medium', 'Dev.to', 'Postificus'];
 
 const Landing = () => {
     const backgroundStyle = {
@@ -49,7 +49,7 @@ const Landing = () => {
                             <em className="font-heading text-brand italic font-bold">Publish everywhere.</em>
                         </h1>
                         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-gray-500 md:text-xl">
-                            Draft with focus, refine with clarity, and publish to Medium, Dev.to, and LinkedIn without the noise.
+                            Draft with focus, refine with clarity, and publish to Medium and Dev.to without the noise.
                         </p>
                         <div className="mt-7 flex flex-col items-center gap-4 sm:flex-row">
                             <Link

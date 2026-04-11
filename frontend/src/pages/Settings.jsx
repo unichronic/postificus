@@ -240,15 +240,6 @@ const Settings = () => {
                                     icon="M"
                                     automated={true}
                                 />
-
-                                {/* LinkedIn */}
-                                <ConnectionCard
-                                    platform="linkedin"
-                                    name="LinkedIn"
-                                    description="Connect your LinkedIn account (Coming Soon)."
-                                    icon="IN"
-                                    automated={true}
-                                />
                             </CardContent>
                         </Card>
                     )}
