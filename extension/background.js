@@ -1,9 +1,10 @@
 const API = "https://postificus-api.onrender.com";
+const ext = typeof browser !== "undefined" ? browser : chrome;
 
 async function syncPlatform(platform, cookieNames, domain) {
     const results = await Promise.all(
         cookieNames.map(name =>
-            chrome.cookies.get({ url: `https://${domain}`, name })
+            ext.cookies.get({ url: `https://${domain}`, name })
         )
     );
 
@@ -18,7 +19,7 @@ async function syncPlatform(platform, cookieNames, domain) {
 
     if (!hasCreds) return;
 
-    const stored = await chrome.storage.local.get(`synced_${platform}`);
+    const stored = await ext.storage.local.get(`synced_${platform}`);
     const key = JSON.stringify(creds);
     if (stored[`synced_${platform}`] === key) return;
 
@@ -28,7 +29,7 @@ async function syncPlatform(platform, cookieNames, domain) {
         body: JSON.stringify({ platform, credentials: creds })
     });
 
-    await chrome.storage.local.set({ [`synced_${platform}`]: key });
+    await ext.storage.local.set({ [`synced_${platform}`]: key });
     console.log(`[Postificus] ✅ ${platform} credentials synced`);
 }
 
@@ -38,17 +39,14 @@ function checkUrl(url) {
     else if (url.includes("medium.com")) syncPlatform("medium", ["uid", "sid", "xsrf"], "medium.com");
 }
 
-// Trigger on tab navigation
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+ext.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === "complete") checkUrl(tab.url);
 });
 
-// Trigger immediately on install/reload for already-open tabs
-chrome.runtime.onInstalled.addListener(() => {
-    chrome.tabs.query({}, (tabs) => tabs.forEach(t => checkUrl(t.url)));
+ext.runtime.onInstalled.addListener(() => {
+    ext.tabs.query({}, (tabs) => tabs.forEach(t => checkUrl(t.url)));
 });
 
-// Also trigger on browser startup
-chrome.runtime.onStartup.addListener(() => {
-    chrome.tabs.query({}, (tabs) => tabs.forEach(t => checkUrl(t.url)));
+ext.runtime.onStartup.addListener(() => {
+    ext.tabs.query({}, (tabs) => tabs.forEach(t => checkUrl(t.url)));
 });

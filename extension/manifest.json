@@ -21,5 +21,11 @@
   ],
   "icons": {
     "48": "icon.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "postificus@connector",
+      "strict_min_version": "109.0"
+    }
   }
 }
