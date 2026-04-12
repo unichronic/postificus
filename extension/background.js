@@ -1,5 +1,4 @@
 const API = "https://postificus-api.onrender.com";
-const USER_ID = "00000000-0000-0000-0000-000000000001";
 
 async function syncPlatform(platform, cookieNames, domain) {
     const results = await Promise.all(
