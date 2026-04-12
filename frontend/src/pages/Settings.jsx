@@ -217,6 +217,30 @@ const Settings = () => {
                     )}
 
                     {activeTab === "connections" && (
+                        <div className="space-y-6">
+                        {/* Extension Setup Banner */}
+                        <Card className="border-brand/20 bg-brand/5 shadow-none">
+                            <CardContent className="pt-5">
+                                <div className="flex items-start gap-4">
+                                    <div className="text-2xl">🔌</div>
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-gray-900 text-base">Postificus Browser Connector</p>
+                                        <p className="text-sm text-gray-500 mt-1">Install the extension once — it automatically syncs your credentials whenever you visit Dev.to or Medium.</p>
+                                        <div className="mt-3 flex flex-wrap gap-2 items-center">
+                                            <a
+                                                href="/postificus-extension.zip"
+                                                download="postificus-extension.zip"
+                                                className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-dark transition-colors"
+                                            >
+                                                ⬇ Download Extension
+                                            </a>
+                                            <span className="text-xs text-gray-400">Then: chrome://extensions → Developer Mode ON → Load unpacked → select the unzipped folder</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
                         <Card className="border-gray-200/60 shadow-none bg-white/70">
                             <CardHeader>
                                 <CardTitle className="text-3xl font-semibold text-gray-900 font-heading">Connections</CardTitle>
@@ -242,6 +266,7 @@ const Settings = () => {
                                 />
                             </CardContent>
                         </Card>
+                        </div>
                     )}
                 </div>
             </div>
