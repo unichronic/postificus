@@ -1,6 +1,6 @@
 services:
   # --------------------------------------------------------------------------------
-  # 1. API Service (Web)
+  # 1. API Service
   # --------------------------------------------------------------------------------
   - type: web
     name: postificus-api
@@ -9,24 +9,20 @@ services:
     dockerfilePath: ./Dockerfile
     plan: free
     numInstances: 1
-    dockerCommand: ./postificus-api # Override CMD
+    dockerCommand: ./postificus-api
     envVars:
       - key: APP_ENV
         value: production
-      - key: PORT
-        value: 8080
       - key: DEFAULT_USER_ID
         value: "00000000-0000-0000-0000-000000000001"
       - key: WORKER_URL
-        sync: false # Used to wake up the worker (e.g. https://postificus-worker.onrender.com)
-      # External Services (User must provide connections)
+        sync: false
       - key: DATABASE_URL
-        sync: false # Supabase (postgres://...)
+        sync: false
       - key: REDIS_URL
-        sync: false # Redis Cloud (redis://...)
+        sync: false
       - key: RABBITMQ_URL
-        sync: false # CloudAMQP (amqps://...)
-      # S3 / Object Storage
+        sync: false
       - key: S3_ENDPOINT
         sync: false
       - key: S3_ACCESS_KEY
@@ -38,9 +34,8 @@ services:
       - key: S3_PUBLIC_URL
         sync: false
 
-
   # --------------------------------------------------------------------------------
-  # 2. Worker Service (Running as Web Service for Free Tier)
+  # 2. Worker Service
   # --------------------------------------------------------------------------------
   - type: web
     name: postificus-worker
@@ -53,20 +48,18 @@ services:
     envVars:
       - key: APP_ENV
         value: production
+      - key: DEFAULT_USER_ID
+        value: "00000000-0000-0000-0000-000000000001"
       - key: BROWSER_HEADLESS
         value: "true"
       - key: BROWSER_BIN
         value: /usr/bin/chromium-browser
-      - key: DEFAULT_USER_ID
-        value: "00000000-0000-0000-0000-000000000001"
-      # External Services
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
         sync: false
       - key: RABBITMQ_URL
         sync: false
-      # S3
       - key: S3_ENDPOINT
         sync: false
       - key: S3_ACCESS_KEY
@@ -74,5 +67,6 @@ services:
       - key: S3_SECRET_KEY
         sync: false
       - key: S3_BUCKET
-        value: postificus
-
+        value: postificus-uploads
+      - key: S3_PUBLIC_URL
+        sync: false
