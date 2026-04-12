@@ -1,24 +1,20 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "Postificus Connector",
   "version": "1.0.0",
   "description": "Automatically connects your Medium and Dev.to accounts to Postificus.",
-  "permissions": ["cookies", "storage", "tabs"],
-  "host_permissions": [
+  "permissions": [
+    "cookies",
+    "storage",
+    "tabs",
     "https://dev.to/*",
     "https://medium.com/*",
     "https://postificus-api.onrender.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"],
+    "persistent": false
   },
-  "content_scripts": [
-    {
-      "matches": ["https://dev.to/*", "https://medium.com/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ],
   "icons": {
     "48": "icon.png"
   },
