@@ -41,11 +41,9 @@ const Editor = ({ draftId, isExistingDraft = false }) => {
 
     const editor = useEditor({
         extensions: [
-            StarterKit,
+            StarterKit.configure({ link: false }),
             Image,
-            Link.configure({
-                openOnClick: false,
-            }),
+            Link.configure({ openOnClick: false }),
         ],
         content: '',
         editorProps: {

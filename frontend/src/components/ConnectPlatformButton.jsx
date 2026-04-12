@@ -13,30 +13,15 @@ const ConnectPlatformButton = ({ platform, name, onConnected, className, isConne
 
     const handleConnect = async () => {
         setIsLoading(true);
-        // Show immediate feedback
-        // If we had a toast system: toast({ title: "Launching...", description: "Check the popup window" })
-
         try {
             const response = await fetch(`${apiBase}/api/connect/${platform}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    platform: platform,
-                    user_id: '00000000-0000-0000-0000-000000000001' // TODO: Get from auth context
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ platform, user_id: '00000000-0000-0000-0000-000000000001' })
             });
-
             const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || data.error || 'Connection failed');
-            }
-
-            // Success
+            if (!response.ok) throw new Error(data.message || data.error || 'Connection failed');
             if (onConnected) onConnected(data);
-
         } catch (error) {
             console.error("Connection error:", error);
             alert(`Failed to connect to ${name}: ${error.message}`);
@@ -44,6 +29,9 @@ const ConnectPlatformButton = ({ platform, name, onConnected, className, isConne
             setIsLoading(false);
         }
     };
+
+    // Browser automation login only works locally, not in production
+    if (import.meta.env.PROD) return null;
 
     return (
         <Button
