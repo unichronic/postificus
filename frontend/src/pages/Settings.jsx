@@ -226,23 +226,24 @@ const Settings = () => {
                                     <div className="flex-1">
                                         <p className="font-semibold text-gray-900 text-base">Postificus Browser Connector</p>
                                         <p className="text-sm text-gray-500 mt-1">Install the extension once — it automatically syncs your credentials whenever you visit Dev.to or Medium.</p>
-                                        <div className="mt-3 flex flex-wrap gap-2 items-center">
-                                            <a
-                                                href="/postificus-extension-chrome.zip"
-                                                download="postificus-extension-chrome.zip"
-                                                className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-dark transition-colors"
-                                            >
-                                                ⬇ Chrome / Edge
-                                            </a>
-                                            <a
-                                                href="/postificus-extension-firefox.zip"
-                                                download="postificus-extension-firefox.zip"
-                                                className="inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-orange-600 transition-colors"
-                                            >
-                                                ⬇ Firefox
-                                            </a>
-                                            <span className="text-xs text-gray-400">Unzip → Chrome: chrome://extensions → Developer Mode → Load unpacked | Firefox: about:debugging → Load Temporary Add-on → select manifest.json</span>
-                                        </div>
+                                        {(() => {
+                                            const isFirefox = navigator.userAgent.includes('Firefox');
+                                            const isChrome = !isFirefox;
+                                            const zip = isFirefox ? '/postificus-extension-firefox.zip' : '/postificus-extension-chrome.zip';
+                                            const label = '⬇ Download Extension';
+                                            const hint = isFirefox
+                                                ? 'Unzip → about:debugging → Load Temporary Add-on → select manifest.json'
+                                                : 'Unzip → chrome://extensions → Developer Mode ON → Load unpacked';
+                                            const btnClass = isFirefox
+                                                ? 'inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-orange-600 transition-colors'
+                                                : 'inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-dark transition-colors';
+                                            return (
+                                                <div className="mt-3 flex flex-wrap gap-2 items-center">
+                                                    <a href={zip} download className={btnClass}>{label}</a>
+                                                    <span className="text-xs text-gray-400">{hint}</span>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             </CardContent>
