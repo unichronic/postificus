@@ -47,6 +47,15 @@ func (c *SettingsController) SaveCredentials(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, map[string]string{"status": "saved"})
 }
 
+func (c *SettingsController) DeleteCredentials(ctx echo.Context) error {
+	platform := ctx.Param("platform")
+	userID := service.DefaultUserID()
+	if err := c.authService.DeleteCredentials(ctx.Request().Context(), userID, platform); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return ctx.JSON(http.StatusOK, map[string]string{"status": "disconnected"})
+}
+
 func (c *SettingsController) GetCredentialsStatus(ctx echo.Context) error {
 	platform := ctx.Param("platform")
 	userID := service.DefaultUserID()

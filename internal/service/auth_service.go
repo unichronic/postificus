@@ -66,6 +66,10 @@ func (s *AuthService) ConnectPlatform(ctx context.Context, userID string, platfo
 }
 
 // ManualSaveCredentials allows saving credentials directly (non-interactive)
+func (s *AuthService) DeleteCredentials(ctx context.Context, userID string, platform string) error {
+	return s.credsRepo.DeleteCredentials(ctx, userID, platform)
+}
+
 func (s *AuthService) ManualSaveCredentials(ctx context.Context, userID string, platform string, creds map[string]string) error {
 	return s.credsRepo.SaveCredentials(ctx, userID, platform, creds)
 }

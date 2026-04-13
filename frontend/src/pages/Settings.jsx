@@ -364,10 +364,33 @@ const ConnectionCard = ({ platform, name, description, icon, fields, automated }
                             isConnected={true}
                             onConnected={() => {
                                 alert(`${name} re-connected successfully!`);
-                                checkConnection(); // Refresh status
+                                checkConnection();
                             }}
                             className="bg-brand hover:bg-brand-dark text-white px-4 py-2"
                         />
+                    ) : (
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsEditing(true)}
+                            className="gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 text-base px-4 py-2.5"
+                        >
+                            <Edit2 className="w-4 h-4" />
+                            Edit Credentials
+                        </Button>
+                    )}
+                    <Button
+                        variant="outline"
+                        onClick={async () => {
+                            if (!confirm(`Disconnect ${name}?`)) return;
+                            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/settings/credentials/${platform}`, { method: 'DELETE' });
+                            setIsConnected(false);
+                            setAccountName('');
+                        }}
+                        className="border-red-200 text-red-600 hover:bg-red-50 text-base px-4 py-2.5"
+                    >
+                        Disconnect
+                    </Button>
+                </div>
                     ) : (
                         <Button
                             variant="outline"

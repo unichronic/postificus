@@ -14,6 +14,7 @@ import (
 type CredentialsRepository interface {
 	SaveCredentials(ctx context.Context, userID string, platform string, creds map[string]string) error
 	GetCredentials(ctx context.Context, userID string, platform string) (*domain.UserCredential, error)
+	DeleteCredentials(ctx context.Context, userID string, platform string) error
 }
 
 // PostgresCredentialsRepository implements CredentialsRepository
@@ -45,6 +46,11 @@ func (r *PostgresCredentialsRepository) SaveCredentials(ctx context.Context, use
 	}
 
 	return nil
+}
+
+func (r *PostgresCredentialsRepository) DeleteCredentials(ctx context.Context, userID string, platform string) error {
+	_, err := DB.Exec(ctx, `DELETE FROM user_credentials WHERE user_id = $1 AND platform = $2`, userID, platform)
+	return err
 }
 
 func (r *PostgresCredentialsRepository) GetCredentials(ctx context.Context, userID string, platform string) (*domain.UserCredential, error) {

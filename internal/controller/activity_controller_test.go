@@ -32,6 +32,9 @@ func (m *MockActivityRepo) GetCredentials(ctx context.Context, userID string, pl
 func (m *MockActivityRepo) SaveCredentials(ctx context.Context, userID string, platform string, credentials map[string]string) error {
 	return nil
 }
+func (m *MockActivityRepo) DeleteCredentials(ctx context.Context, userID string, platform string) error {
+	return nil
+}
 func (m *MockActivityRepo) GetAllCredentials(ctx context.Context, userID string) ([]domain.UserCredential, error) {
 	return nil, nil
 }

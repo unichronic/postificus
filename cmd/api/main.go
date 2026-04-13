@@ -102,8 +102,9 @@ func main() {
 	e.POST("/api/connect/:platform", authController.HandleConnectPlatform) // Unified
 
 	// Settings & Profile
-	e.POST("/api/settings/credentials", settingsController.SaveCredentials) // Manual override
+	e.POST("/api/settings/credentials", settingsController.SaveCredentials)
 	e.GET("/api/settings/credentials/:platform", settingsController.GetCredentialsStatus)
+	e.DELETE("/api/settings/credentials/:platform", settingsController.DeleteCredentials)
 	e.GET("/api/profile", settingsController.GetProfile)
 	e.PUT("/api/profile", settingsController.SaveProfile)
 
