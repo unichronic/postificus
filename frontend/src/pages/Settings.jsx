@@ -234,9 +234,7 @@ const Settings = () => {
                                             const hint = isFirefox
                                                 ? 'Unzip → about:debugging → Load Temporary Add-on → select manifest.json'
                                                 : 'Unzip → chrome://extensions → Developer Mode ON → Load unpacked';
-                                            const btnClass = isFirefox
-                                                ? 'inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-orange-600 transition-colors'
-                                                : 'inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-dark transition-colors';
+                                            const btnClass = 'inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-dark transition-colors';
                                             return (
                                                 <div className="mt-3 flex flex-wrap gap-2 items-center">
                                                     <a href={zip} download className={btnClass}>{label}</a>
