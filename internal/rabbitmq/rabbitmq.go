@@ -44,21 +44,6 @@ func (c *Connection) CreateChannel() (*amqp.Channel, error) {
 	return c.conn.Channel()
 }
 
-// WaitUntilReady blocks until RabbitMQ is reachable (for startup)
-func WaitUntilReady(uri string, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		conn, err := amqp.Dial(uri)
-		if err == nil {
-			conn.Close()
-			return nil
-		}
-		log.Println("Waiting for RabbitMQ...", err)
-		time.Sleep(2 * time.Second)
-	}
-	return amqp.ErrClosed
-}
-
 // -------------------------------------------------------
 // PRODUCER
 // -------------------------------------------------------

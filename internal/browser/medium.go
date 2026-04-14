@@ -31,11 +31,6 @@ func waitForSaved(page *rod.Page) error {
 	return fmt.Errorf("sync timeout: stuck on Saving...")
 }
 
-// PostToMedium publishes to Medium using API first, falling back to browser automation
-func PostToMedium(uid, sid, xsrf, title, content string) error {
-	return PostToMediumWithTags(uid, sid, xsrf, title, content, []string{}, "")
-}
-
 // PostToMediumWithTags publishes to Medium with tags support
 func PostToMediumWithTags(uid, sid, xsrf, title, content string, tags []string, coverImage string) error {
 	log.Println("🎯 Attempting Medium API publish...")

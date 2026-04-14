@@ -44,7 +44,6 @@ func NewPublishService(credsRepo storage.CredentialsRepository) *PublishService 
 	// Initialize breakers for known platforms
 	breakers["medium"] = breaker.NewCircuitBreakerWithName("medium", 3, 1*time.Minute)
 	breakers["devto"] = breaker.NewCircuitBreakerWithName("devto", 3, 1*time.Minute)
-	breakers["linkedin"] = breaker.NewCircuitBreakerWithName("linkedin", 3, 1*time.Minute)
 
 	return &PublishService{
 		credsRepo: credsRepo,
@@ -112,19 +111,7 @@ func (s *PublishService) HandlePublishTask(payload []byte) error {
 		url = "https://dev.to/dashboard" // Placeholder
 
 	case "linkedin":
-		cb, ok := s.breakers["linkedin"]
-		if !ok {
-			cb = breaker.NewCircuitBreakerWithName("linkedin", 3, 1*time.Minute)
-		}
-
-		err = cb.Execute(func() error {
-			liAt := getCredential(credsMap, "li_at", "LI_AT")
-			if liAt == "" {
-				return fmt.Errorf("linkedin credentials missing")
-			}
-			return browser.PostToLinkedIn(liAt, p.Content, p.BlogURL)
-		})
-		url = "https://www.linkedin.com/feed/" // Placeholder
+		return fmt.Errorf("linkedin publishing not supported")
 
 	default:
 		return fmt.Errorf("unsupported platform: %s", p.Platform)

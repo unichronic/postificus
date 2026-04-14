@@ -34,15 +34,6 @@ type CircuitBreaker struct {
 	lastFailure  time.Time
 }
 
-func NewCircuitBreaker(failureLimit int, resetTimeout time.Duration) *CircuitBreaker {
-	return &CircuitBreaker{
-		name:         "default", // TODO: Pass name
-		state:        StateClosed,
-		failureLimit: failureLimit,
-		resetTimeout: resetTimeout,
-	}
-}
-
 func NewCircuitBreakerWithName(name string, failureLimit int, resetTimeout time.Duration) *CircuitBreaker {
 	metrics.CircuitBreakerState.WithLabelValues(name).Set(0) // Closed
 	return &CircuitBreaker{

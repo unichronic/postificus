@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/proto"
 )
 
 // WaitForMediumLogin launches a visible browser window and waits for the user to log in.
@@ -197,9 +196,4 @@ func WaitForDevToLogin() (string, string, error) {
 			}
 		}
 	}
-}
-
-// GetCookies is a helper specifically to find finding cookies by name using rod's proto
-func getCookies(browser *rod.Browser) ([]*proto.NetworkCookie, error) {
-	return browser.GetCookies()
 }
