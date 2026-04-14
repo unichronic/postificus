@@ -50,3 +50,10 @@ ext.runtime.onInstalled.addListener(() => {
 ext.runtime.onStartup.addListener(() => {
     ext.tabs.query({}, (tabs) => tabs.forEach(t => checkUrl(t.url)));
 });
+
+// Clear cache when user disconnects from Settings page
+ext.runtime.onMessage.addListener((msg) => {
+    if (msg.type === 'clear_cache' && msg.platform) {
+        ext.storage.local.remove(`synced_${msg.platform}`);
+    }
+});

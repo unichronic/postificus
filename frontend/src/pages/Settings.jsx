@@ -389,6 +389,8 @@ const ConnectionCard = ({ platform, name, description, icon, fields, automated }
                         onClick={async () => {
                             if (!confirm(`Disconnect ${name}?`)) return;
                             await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/settings/credentials/${platform}`, { method: 'DELETE' });
+                            // Clear extension cache so it re-syncs on next visit
+                            try { chrome.runtime?.sendMessage({ type: 'clear_cache', platform }); } catch(e) {}
                             setIsConnected(false);
                             setAccountName('');
                         }}
