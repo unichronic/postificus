@@ -38,14 +38,9 @@ func PostToMedium(uid, sid, xsrf, title, content string) error {
 
 // PostToMediumWithTags publishes to Medium with tags support
 func PostToMediumWithTags(uid, sid, xsrf, title, content string, tags []string, coverImage string) error {
-	if coverImage != "" {
-		log.Println("🖼️ Cover image provided, skipping API and using browser automation...")
-		return postToMediumBrowser(uid, sid, xsrf, title, content, tags, coverImage)
-	}
-
 	log.Println("🎯 Attempting Medium API publish...")
 
-	// Try API-based approach first
+	// Always try API first
 	client := NewMediumAPIClient(uid, sid, xsrf)
 	url, err := client.Publish(title, content, tags)
 
@@ -54,9 +49,9 @@ func PostToMediumWithTags(uid, sid, xsrf, title, content string, tags []string, 
 		return nil
 	}
 
-	// API failed, fall back to browser automation
+	// API failed, fall back to browser automation (without cover image to avoid file picker hang)
 	log.Printf("⚠️ API failed (%v), falling back to browser automation...", err)
-	return postToMediumBrowser(uid, sid, xsrf, title, content, tags, coverImage)
+	return postToMediumBrowser(uid, sid, xsrf, title, content, tags, "")
 }
 
 // postToMediumBrowser is the original browser automation implementation (preserved as fallback)
@@ -195,10 +190,9 @@ func postToMediumBrowser(uid, sid, xsrf, title, content string, tags []string, c
 
 	// Wait for Overlay
 	log.Println("Waiting for publish overlay...")
-	// Wait specifically for the overlay dialog to be visible
-	if err := page.Timeout(10 * time.Second).MustElement(`.overlay-dialog`).WaitVisible(); err != nil {
-		log.Printf("⚠️ Overlay wait warning: %v", err)
-	}
+	rod.Try(func() {
+		page.Timeout(10 * time.Second).MustElement(`.overlay-dialog`).WaitVisible()
+	})
 
 	// Give animation a moment to settle
 	time.Sleep(1 * time.Second)
