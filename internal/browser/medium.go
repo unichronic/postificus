@@ -68,7 +68,7 @@ func postToMediumBrowser(uid, sid, xsrf, title, content string, tags []string, c
 	page := stealth.MustPage(Browser)
 	defer func() {
 		log.Println("Closing page...")
-		page.MustClose()
+		rod.Try(func() { page.MustClose() })
 	}()
 
 	// Navigate to domain to ensure cookies are set correctly
@@ -205,8 +205,8 @@ func postToMediumBrowser(uid, sid, xsrf, title, content string, tags []string, c
 
 		// Use Try to safely check/wait for the input
 		err := rod.Try(func() {
-			// Wait for input to be interactive
-			tagInput := page.Timeout(5 * time.Second).MustElement(`[data-testid="publishTopicsInput"]`)
+			tagInput, e := page.Timeout(5 * time.Second).Element(`[data-testid="publishTopicsInput"]`)
+			if e != nil { panic(e) }
 			tagInput.MustWaitVisible()
 
 			for _, tag := range tags {
@@ -237,13 +237,19 @@ func postToMediumBrowser(uid, sid, xsrf, title, content string, tags []string, c
 
 	// Wait for the modal/panel to appear
 	err = rod.Try(func() {
-		// User provided specific selector: [data-testid="publishConfirmButton"]
-		page.Timeout(5 * time.Second).MustElement(`[data-testid="publishConfirmButton"]`).MustClick()
+		el, e := page.Timeout(5 * time.Second).Element(`[data-testid="publishConfirmButton"]`)
+		if e != nil { panic(e) }
+		el.MustClick()
 	})
 	if err != nil {
-		// Fallback to text matching
-		pubBtn := page.MustElementR("button", "Publish now")
-		pubBtn.MustWaitVisible().MustClick()
+		err = rod.Try(func() {
+			el, e := page.Timeout(5 * time.Second).ElementR("button", "Publish now")
+			if e != nil { panic(e) }
+			el.MustWaitVisible().MustClick()
+		})
+		if err != nil {
+			log.Printf("⚠️ Could not find publish confirm button: %v", err)
+		}
 	}
 
 	// ---------------------------------------------------------
