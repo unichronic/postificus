@@ -35,3 +35,14 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Junk
+medium_blocked.png
+*-logs.txt
+landing.html
+project_summary.json
+AGENT.MD
+FRONTEND_*.md
+quill-drawing-a-line.png
+api
+worker
