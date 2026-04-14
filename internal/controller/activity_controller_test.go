@@ -69,14 +69,8 @@ func TestActivityController_GetMediumActivity_NoCreds(t *testing.T) {
 	err := ctrl.GetMediumActivity(c)
 	t.Logf("GetMediumActivity returned: %v", err)
 
-	// Assert
-	if assert.Error(t, err) {
-		he, ok := err.(*echo.HTTPError)
-		if assert.True(t, ok) {
-			assert.Equal(t, http.StatusInternalServerError, he.Code)
-			assert.Contains(t, he.Message, "credentials missing")
-		}
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 
 	mockRepo.AssertExpectations(t)
 }

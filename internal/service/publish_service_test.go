@@ -32,9 +32,8 @@ func (m *MockCredentialsRepository) GetCredentials(ctx context.Context, userID s
 	return args.Get(0).(*domain.UserCredential), args.Error(1)
 }
 
-func (m *MockCredentialsRepository) GetAllCredentials(ctx context.Context, userID string) ([]domain.UserCredential, error) {
-	args := m.Called(ctx, userID)
-	return args.Get(0).([]domain.UserCredential), args.Error(1)
+func (m *MockCredentialsRepository) DeleteCredentials(ctx context.Context, userID string, platform string) error {
+	return nil
 }
 
 // Mock Automation (Swap function)
