@@ -18,7 +18,6 @@ import (
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"golang.org/x/time/rate"
 )
 
 func main() {
@@ -89,7 +88,7 @@ func main() {
 	e.Use(echoMiddleware.Logger())
 	e.Use(echoMiddleware.Recover())
 	e.Use(echoMiddleware.CORS())
-	e.Use(middleware.RateLimit(middleware.NewRateLimiter(rate.Limit(20), 50)))
+	e.Use(middleware.RateLimit)
 	e.Use(middleware.PrometheusMiddleware)
 
 	// 5. Routes
